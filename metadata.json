@@ -1,5 +1,7 @@
 {
   "name": "Studios Stitch",
-  "description": "High-impact streetwear e-commerce platform. Features include graffiti-stitch visual language, Printful inventory automation, and a custom fuchsia-accented dark mode aesthetic.",
-  "requestFramePermissions": []
+  "description": "Premium 3D-modeled streetwear essentials. High-impact dark mode aesthetic with industrial stitching and fuchsia accents. Featuring Studio Lab AI creative suite.",
+  "requestFramePermissions": [
+    "camera"
+  ]
 }

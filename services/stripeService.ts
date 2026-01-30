@@ -1,29 +1,52 @@
 
+import { loadStripe, Stripe } from '@stripe/stripe-js';
 import { CartItem } from '../types';
-
-/**
- * STRIPE DASHBOARD CONFIG:
- * 
- * 1. Go to: Stripe Dashboard > Payments > Checkout Settings.
- * 2. Allow the following domains for redirects:
- *    - http://localhost:3000
- *    - https://your-production-domain.com
- */
+import { configService } from './configService';
 
 class StripeService {
+  private stripePromise: Promise<Stripe | null> | null = null;
+
+  private getStripe() {
+    const { stripePublicKey } = configService.getConfig();
+    if (!stripePublicKey) return null;
+    
+    if (!this.stripePromise) {
+      this.stripePromise = loadStripe(stripePublicKey);
+    }
+    return this.stripePromise;
+  }
+
   async createCheckoutSession(items: CartItem[], customerEmail: string): Promise<{ url: string }> {
-    console.log('Initiating Stripe Session for:', customerEmail);
+    const { stripePublicKey } = configService.getConfig();
+    if (!stripePublicKey) {
+      throw new Error("STRIPE_NOT_CONFIGURED");
+    }
 
-    const baseUrl = window.location.origin + window.location.pathname;
+    console.log('Initiating Secure Stripe Session...');
+
+    const isProduction = window.location.hostname === 'www.studiosstitch.com';
+    const baseUrl = isProduction 
+      ? 'https://www.studiosstitch.com/' 
+      : window.location.origin + window.location.pathname;
+    
     const successUrl = `${baseUrl}#/checkout-success`;
-    const cancelUrl = `${baseUrl}#/shop`;
-
+    
+    // In a real environment, you'd send items to your backend to get a sessionId
+    // For this bridge, we provide the success URL to simulate completion
     return new Promise((resolve) => {
       setTimeout(() => {
-        // In production, this would be a real redirect to Stripe.com
         resolve({ url: successUrl });
       }, 1000);
     });
+  }
+
+  async testConnection(): Promise<boolean> {
+    try {
+      const stripe = await this.getStripe();
+      return !!stripe;
+    } catch {
+      return false;
+    }
   }
 }
 

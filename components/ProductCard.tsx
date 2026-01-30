@@ -9,17 +9,20 @@ interface ProductCardProps {
 
 const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   return (
-    <div className="relative group">
+    <div className="relative group perspective-1000">
       <Link 
         to={`/product/${product.id}`} 
         className="block bg-white stitch-corner transition-all duration-500 group-hover:-translate-y-2 group-hover:shadow-[0_20px_50px_rgba(192,0,90,0.1)]"
       >
-        <div className="aspect-[3/4] overflow-hidden relative p-1 bg-black">
-          <img 
-            src={product.thumbnail_url} 
-            alt={product.name} 
-            className="w-full h-full object-cover grayscale transition-all duration-1000 group-hover:grayscale-0 group-hover:scale-105"
-          />
+        <div className="aspect-[3/4] overflow-hidden relative p-1 bg-black preserve-3d">
+          <div className="w-full h-full transition-transform duration-1000 group-hover:ghost-spin-active">
+            <img 
+              src={product.thumbnail_url} 
+              alt={product.name} 
+              className="w-full h-full object-cover grayscale transition-all duration-1000 group-hover:grayscale-0 group-hover:scale-105"
+            />
+          </div>
+          
           {/* Fuchsia Accent on Hover */}
           <div className="absolute inset-0 bg-fuchsia-studio opacity-0 group-hover:opacity-10 transition-opacity pointer-events-none" />
           

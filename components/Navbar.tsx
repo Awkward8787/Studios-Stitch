@@ -23,7 +23,6 @@ const Navbar: React.FC<NavbarProps> = ({ cartCount, onCartToggle, userEmail, onL
                 alt="Studios Stitch" 
                 className="h-full w-auto logo-glow grayscale transition-all group-hover:grayscale-0"
                 onError={(e) => {
-                  // Fallback if logo.png isn't available yet
                   (e.target as HTMLImageElement).style.display = 'none';
                   (e.target as HTMLImageElement).parentElement!.innerHTML = '<span class="text-xl font-black uppercase tracking-tighter">Studios<span class="text-fuchsia-studio">Stitch</span></span>';
                 }}
@@ -38,6 +37,10 @@ const Navbar: React.FC<NavbarProps> = ({ cartCount, onCartToggle, userEmail, onL
               <Link to="/collections" className={`hover:text-white transition-all relative ${location.pathname === '/collections' ? 'text-white' : ''}`}>
                 Series
                 {location.pathname === '/collections' && <div className="absolute -bottom-1 left-0 w-full h-[1px] bg-fuchsia-studio" />}
+              </Link>
+              <Link to="/lab" className={`hover:text-fuchsia-studio transition-all relative ${location.pathname === '/lab' ? 'text-fuchsia-studio' : ''}`}>
+                Lab
+                {location.pathname === '/lab' && <div className="absolute -bottom-1 left-0 w-full h-[1px] bg-fuchsia-studio" />}
               </Link>
             </nav>
           </div>
@@ -74,7 +77,6 @@ const Navbar: React.FC<NavbarProps> = ({ cartCount, onCartToggle, userEmail, onL
           </div>
         </div>
       </div>
-      {/* Sewing Path Line */}
       <div className="stitch-line-h w-full opacity-50" />
     </header>
   );

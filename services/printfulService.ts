@@ -2,19 +2,7 @@
 import { Product, ProductVariant } from '../types';
 
 /**
- * PRINTFUL API CONFIGURATION (Based on OpenAPI Spec)
- * 
- * 1. APP REGISTRATION (What to put in Printful Dashboard):
- *    If you are creating an "App" at developers.printful.com:
- *    - Application URL: http://localhost:3000
- *    - Redirect URI: http://localhost:3000/
- * 
- * 2. AUTHENTICATION:
- *    - Using your Private Token: 'KwSxNJ1mHlNYUJZ57eqOIAXQXQ9250Q19a2CHEas'
- *    - For account-level tokens, the 'X-PF-Store-Id' header is required.
- * 
- * 3. RATE LIMITS:
- *    - 120 calls/min. Our app fetches products in a batch to stay safe.
+ * PRINTFUL API CONFIGURATION
  */
 
 const PRINTFUL_API_URL = 'https://api.printful.com';
@@ -34,7 +22,6 @@ class PrintfulService {
       'Content-Type': 'application/json'
     };
 
-    // The OpenAPI spec confirms this header name for account-level tokens
     if (storeId) {
       headers['X-PF-Store-Id'] = storeId;
     }
@@ -48,13 +35,8 @@ class PrintfulService {
       const data = await response.json();
 
       if (!response.ok) {
-        // Handle specific API error codes from the spec
         const errorMsg = data.error?.message || `API Error: ${response.status}`;
         console.error('Printful API Error:', data.error);
-        
-        if (response.status === 401) throw new Error("UNAUTHORIZED_TOKEN");
-        if (response.status === 400 && errorMsg.includes("Manual Order")) throw new Error("STORE_TYPE_MISMATCH");
-        
         throw new Error(errorMsg);
       }
 
@@ -65,35 +47,21 @@ class PrintfulService {
     }
   }
 
-  /**
-   * Finds the first compatible 'api' or 'manual' store in the account.
-   * Required to satisfy the "Products API" requirements for non-synced platforms.
-   */
   private async findCompatibleStore(): Promise<string> {
     try {
       const data = await this.proxyFetch('/stores');
       const stores = data.result || [];
-      
-      // Look for manual/api stores first as per spec for the /store/products endpoint
       const apiStore = stores.find((s: any) => s.type === 'api' || s.type === 'manual');
-      
       if (!apiStore) {
-        // Fallback to the first available store if none are explicit API types
         if (stores.length > 0) return stores[0].id.toString();
         throw new Error("NO_STORES_FOUND");
       }
-      
       return apiStore.id.toString();
     } catch (err: any) {
-      console.error("Store discovery failed:", err);
       throw new Error("PRINTFUL_SETUP_REQUIRED");
     }
   }
 
-  /**
-   * Fetches products using the /store/products endpoint (Products API)
-   * which is recommended for the "Manual Order / API" platform.
-   */
   async fetchProducts(): Promise<Product[]> {
     try {
       if (!this.activeStoreId) {
@@ -106,7 +74,6 @@ class PrintfulService {
       if (rawProducts.length === 0) return [];
 
       const products: Product[] = [];
-      // Fetch details for the first few products (respecting rate limits)
       const productsToFetch = rawProducts.slice(0, 12);
       
       for (const p of productsToFetch) {
@@ -114,7 +81,7 @@ class PrintfulService {
           const detail = await this.getProduct(p.id.toString());
           if (detail) products.push(detail);
         } catch (e) {
-          console.warn(`Skipping product ${p.id} due to fetch error.`);
+          console.warn(`Skipping product ${p.id}`);
         }
       }
 
@@ -125,10 +92,6 @@ class PrintfulService {
     }
   }
 
-  /**
-   * Gets details for a specific Sync Product.
-   * Merges sync_product info with sync_variants as per API structure.
-   */
   async getProduct(id: string): Promise<Product | undefined> {
     try {
       const data = await this.proxyFetch(`/store/products/${id}`, this.activeStoreId || undefined);
@@ -136,19 +99,28 @@ class PrintfulService {
 
       const { sync_product, sync_variants } = data.result;
 
-      // Collect all unique preview/mockup images from variant files
+      // Logic to find the "Ghost" 3D Model image
+      // We look through all variants and their files for 'preview' types
+      // Usually, the first 'preview' file is the ghost mannequin mockup
       const allImages = new Set<string>();
-      if (sync_product.thumbnail_url) allImages.add(sync_product.thumbnail_url);
+      let ghostMockupUrl = sync_product.thumbnail_url;
       
+      const variantImages: string[] = [];
       sync_variants.forEach((v: any) => {
         v.files?.forEach((f: any) => {
-          if (f.preview_url) allImages.add(f.preview_url);
-          else if (f.url) allImages.add(f.url);
+          if (f.type === 'preview' && f.preview_url) {
+            variantImages.push(f.preview_url);
+            allImages.add(f.preview_url);
+          }
         });
       });
 
+      // Override primary thumbnail with the first ghost mockup if found
+      if (variantImages.length > 0) {
+        ghostMockupUrl = variantImages[0];
+      }
+
       const variants: ProductVariant[] = sync_variants.map((v: any) => {
-        // Extract size/color from name if not explicitly provided in variant props
         const nameParts = v.name.split(' - ');
         const optionParts = nameParts[1]?.split(' / ') || [];
         
@@ -167,8 +139,8 @@ class PrintfulService {
         external_id: sync_product.external_id || '',
         name: sync_product.name,
         price: parseFloat(sync_variants[0]?.retail_price || '0'),
-        description: sync_product.description || "Premium studio essential, tailored for the modern creative. High-quality construction and refined aesthetic.",
-        thumbnail_url: sync_product.thumbnail_url || 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?q=80&w=1000&auto=format&fit=crop',
+        description: sync_product.description || "Premium studio essential. High-density textile assembly.",
+        thumbnail_url: ghostMockupUrl,
         images: Array.from(allImages),
         variants
       };
