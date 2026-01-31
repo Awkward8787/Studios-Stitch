@@ -116,9 +116,11 @@ async function handleSuccessfulPayment(session) {
 // --- API ENDPOINTS ---
 app.get('/api/health', async (req, res) => {
   let printfulStatus = 'unknown';
+  let storeDetails = null;
   try {
     if (PRINTFUL_TOKEN) {
-      await fetchFromPrintful('/store-statistics');
+      const stats = await fetchFromPrintful('/store-statistics');
+      storeDetails = stats.result;
       printfulStatus = 'connected';
     } else {
       printfulStatus = 'missing_token';
@@ -132,6 +134,7 @@ app.get('/api/health', async (req, res) => {
     timestamp: new Date().toISOString(),
     bridge: {
       printful: printfulStatus,
+      store: storeDetails,
       stripe: !!stripe,
       node: process.version
     }
@@ -193,14 +196,14 @@ app.post('/api/checkout/create-session', async (req, res) => {
   }
 });
 
-// CRITICAL: Catch-all for API routes to ensure they ALWAYS return JSON, never HTML
+// Catch-all for API routes
 app.all('/api/*', (req, res) => {
   res.status(404).json({ 
     error: `STITCH_ROUTING_ERROR: Route ${req.method} ${req.url} not found on backend.` 
   });
 });
 
-// --- STATIC FILES (SPA Fallback) ---
+// Static Files
 const distPath = path.resolve(__dirname, 'dist');
 app.use(express.static(distPath));
 

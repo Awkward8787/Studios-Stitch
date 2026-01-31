@@ -55,7 +55,7 @@ const OpeningSequence: React.FC<OpeningSequenceProps> = ({ onComplete }) => {
           <div className="space-y-2 font-mono text-[10px] text-zinc-500 uppercase tracking-widest">
             {logs.map((log, i) => (
               <div key={i} className={i === logs.length - 1 ? "text-fuchsia-studio terminal-flicker" : ""}>
-                <span className="text-zinc-800">>>></span> {log}
+                <span className="text-zinc-800">{"\u003E\u003E\u003E"}</span> {log}
               </div>
             ))}
           </div>
