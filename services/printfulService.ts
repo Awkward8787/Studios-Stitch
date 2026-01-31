@@ -2,9 +2,14 @@
 import { Product, ProductVariant } from '../types';
 
 class PrintfulService {
+  private get baseUrl() {
+    return window.location.origin;
+  }
+
   private async apiFetch(endpoint: string) {
     try {
-      const response = await fetch(endpoint, {
+      const url = `${this.baseUrl}${endpoint}`;
+      const response = await fetch(url, {
         method: 'GET',
         headers: {
           'Accept': 'application/json',
@@ -15,10 +20,10 @@ class PrintfulService {
       const rawText = await response.text();
       const contentType = response.headers.get('content-type');
       
-      // If we got a text 404, LiteSpeed/Hostinger is blocking the request before Node.js sees it
+      // Handle the "Hostinger 404" scenario (server returns HTML instead of JSON)
       if (response.status === 404 && !contentType?.includes('json')) {
-        console.error('STITCH_CRITICAL: Request hit a 404 page. The Node.js server did not receive this request.');
-        throw new Error(`STITCH_TERMINAL_404: Check that no 'api' folder exists in public_html and ensure Node app is running on Hostinger.`);
+        console.error('STITCH_TERMINAL_CRITICAL: The request reached the domain but hit a 404 page instead of the Node.js application.');
+        throw new Error(`404: Node.js server not reached. Ensure no folder named 'api' exists in public_html.`);
       }
 
       if (contentType && contentType.includes('application/json')) {
@@ -26,10 +31,10 @@ class PrintfulService {
         if (!response.ok) throw new Error(data.error || `Server Error ${response.status}`);
         return data;
       } else {
-        throw new Error(`Protocol Error: Received ${contentType} instead of JSON. Check backend status.`);
+        throw new Error(`Protocol Error: Expected JSON but received ${contentType}. Check server logs.`);
       }
     } catch (err: any) {
-      console.error('STITCH_FETCH_FAILURE:', err.message);
+      console.error('STITCH_PROTOCOL_ERROR:', err.message);
       throw err;
     }
   }
@@ -41,6 +46,7 @@ class PrintfulService {
       if (rawProducts.length === 0) return [];
 
       const products: Product[] = [];
+      // Fetch details for the first 12 products
       const productsToFetch = rawProducts.slice(0, 12);
       
       for (const p of productsToFetch) {

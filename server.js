@@ -12,57 +12,57 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-// --- INITIALIZATION ---
+// --- CONFIGURATION ---
 const PRINTFUL_TOKEN = (process.env.PRINTFUL_TOKEN || '').trim().replace(/["']/g, '');
 const STRIPE_SECRET_KEY = (process.env.STRIPE_SECRET_KEY || '').trim();
 const STRIPE_WEBHOOK_SECRET = (process.env.STRIPE_WEBHOOK_SECRET || '').trim();
 
 const stripe = STRIPE_SECRET_KEY ? new Stripe(STRIPE_SECRET_KEY) : null;
 
-// --- 1. STRIPE WEBHOOK (MUST BE BEFORE express.json()) ---
-// Uses express.raw to provide the exact byte-for-byte body required for signature verification
+// --- WEBHOOK ENDPOINT (MUST BE BEFORE express.json()) ---
+// This uses express.raw to ensure we have the untouched buffer for Stripe signature verification
 app.post('/api/stripe/webhook', express.raw({ type: 'application/json' }), async (req, res) => {
   if (!stripe || !STRIPE_WEBHOOK_SECRET) {
-    console.error('[STRIPE] Webhook error: Stripe not configured or missing Webhook Secret.');
-    return res.status(400).send('Stripe Config Missing');
+    console.error('[STRIPE] Webhook received but Stripe is not configured.');
+    return res.status(400).send('Stripe configuration missing');
   }
 
   const sig = req.headers['stripe-signature'];
   let event;
 
   try {
-    // req.body is a Buffer here because of express.raw
+    // req.body here is the raw buffer thanks to express.raw
     event = stripe.webhooks.constructEvent(req.body, sig, STRIPE_WEBHOOK_SECRET);
   } catch (err) {
     console.error(`[STRIPE] Webhook Signature Verification Failed: ${err.message}`);
     return res.status(400).send(`Webhook Error: ${err.message}`);
   }
 
-  console.log(`[STRIPE] Event received: ${event.type}`);
-
-  // Handle successful payments
+  // Handle the specific event
   if (event.type === 'checkout.session.completed') {
     const session = event.data.object;
-    console.log(`[STRIPE] Payment confirmed for session: ${session.id}`);
+    console.log(`[STRIPE] Payment successful for session: ${session.id}`);
     
+    // Trigger Printful Order Creation
     try {
       await handleSuccessfulPayment(session);
     } catch (orderErr) {
-      console.error(`[PRINTFUL] Order submission failed: ${orderErr.message}`);
-      // Return 200 even if Printful fails so Stripe doesn't keep retrying the webhook
+      console.error(`[PRINTFUL] Order creation failed after payment: ${orderErr.message}`);
+      // Note: We still return 200 to Stripe to acknowledge receipt of the webhook
     }
   }
 
+  // Acknowledge receipt of the event
   res.json({ received: true });
 });
 
-// --- 2. GLOBAL MIDDLEWARE (AFTER WEBHOOK) ---
+// --- GLOBAL MIDDLEWARE (AFTER WEBHOOK) ---
 app.use(cors());
 app.use(express.json());
 
-// Logger to help diagnose Hostinger routing
+// Log all incoming requests to help diagnose routing issues on Hostinger
 app.use((req, res, next) => {
-  console.log(`[STITCH_LOG] ${new Date().toISOString()} | ${req.method} ${req.url}`);
+  console.log(`[TERMINAL] ${new Date().toISOString()} | ${req.method} ${req.url}`);
   next();
 });
 
@@ -85,7 +85,7 @@ async function fetchFromPrintful(endpoint, method = 'GET', body = null) {
   
   try {
     const data = JSON.parse(rawText);
-    if (!response.ok) throw new Error(data?.error?.message || `Printful Error: ${response.status}`);
+    if (!response.ok) throw new Error(data?.error?.message || `Printful: ${response.status}`);
     return data;
   } catch (e) {
     throw new Error(`Printful Parse Error: ${rawText.substring(0, 50)}`);
@@ -93,12 +93,12 @@ async function fetchFromPrintful(endpoint, method = 'GET', body = null) {
 }
 
 async function handleSuccessfulPayment(session) {
-  // Metadata was attached during createCheckoutSession in stripeService.ts
+  // Extract variant and metadata for Printful
   const variantsMetadata = JSON.parse(session.metadata.variants || '[]');
   
   const printfulOrder = {
     recipient: {
-      name: session.shipping_details?.name || 'Valued Customer',
+      name: session.shipping_details?.name || 'Customer',
       address1: session.shipping_details?.address?.line1,
       city: session.shipping_details?.address?.city,
       state_code: session.shipping_details?.address?.state,
@@ -112,19 +112,16 @@ async function handleSuccessfulPayment(session) {
     }))
   };
 
-  console.log(`[PRINTFUL] Submitting order for: ${printfulOrder.recipient.email}`);
-  const result = await fetchFromPrintful('/orders', 'POST', printfulOrder);
-  console.log(`[PRINTFUL] Order created successfully: ${result.result.id}`);
-  return result;
+  console.log(`[PRINTFUL] Creating order for variant(s): ${variantsMetadata.map(v => v.variantId).join(', ')}`);
+  return await fetchFromPrintful('/orders', 'POST', printfulOrder);
 }
 
 // --- API ENDPOINTS ---
 app.get('/api/health', (req, res) => {
   res.json({ 
-    status: 'operational', 
-    printful: !!PRINTFUL_TOKEN, 
-    stripe: !!stripe,
-    webhook: !!STRIPE_WEBHOOK_SECRET
+    status: 'active', 
+    timestamp: new Date().toISOString(),
+    config: { printful: !!PRINTFUL_TOKEN, stripe: !!stripe, webhook: !!STRIPE_WEBHOOK_SECRET } 
   });
 });
 
@@ -147,7 +144,7 @@ app.get('/api/printful/products/:id', async (req, res) => {
 });
 
 app.post('/api/checkout/create-session', async (req, res) => {
-  if (!stripe) return res.status(500).json({ error: 'Stripe keys missing on server.' });
+  if (!stripe) return res.status(500).json({ error: 'Stripe configuration missing' });
   try {
     const { items, customerEmail } = req.body;
     
@@ -156,24 +153,17 @@ app.post('/api/checkout/create-session', async (req, res) => {
       line_items: items.map(i => ({
         price_data: {
           currency: 'usd',
-          product_data: { 
-            name: i.name, 
-            images: [i.thumbnail_url],
-            description: `Size: ${i.selectedSize}`
-          },
+          product_data: { name: i.name, images: [i.thumbnail_url] },
           unit_amount: Math.round(i.price * 100),
         },
         quantity: i.quantity,
       })),
       mode: 'payment',
       customer_email: customerEmail,
-      shipping_address_collection: { 
-        allowed_countries: ['US', 'CA', 'GB', 'AU', 'DE', 'FR'] 
-      },
+      shipping_address_collection: { allowed_countries: ['US', 'CA', 'GB', 'AU', 'DE', 'FR'] },
       success_url: `${req.headers.origin}/#/checkout-success`,
       cancel_url: `${req.headers.origin}/#/shop`,
       metadata: {
-        // Store variants in metadata so we can retrieve them in the webhook
         variants: JSON.stringify(items.map(i => {
            const variant = i.variants.find(v => v.size === i.selectedSize);
            return {
@@ -185,29 +175,29 @@ app.post('/api/checkout/create-session', async (req, res) => {
     });
     res.json({ url: session.url });
   } catch (err) {
-    console.error(`[STRIPE_SESSION_ERR] ${err.message}`);
+    console.error(`[STRIPE] Session creation error: ${err.message}`);
     res.status(500).json({ error: err.message });
   }
 });
 
-// Explicitly handle undefined /api/* calls to avoid serving HTML for 404s
+// Catch-all for undefined /api routes (prevents text 404s)
 app.all('/api/*', (req, res) => {
-  res.status(404).json({ error: `STITCH_API_ERROR: Route ${req.method} ${req.url} not found.` });
+  res.status(404).json({ error: `STITCH_TERMINAL: Route ${req.method} ${req.url} not found.` });
 });
 
 // --- STATIC ASSETS ---
 const distPath = path.resolve(__dirname, 'dist');
 app.use(express.static(distPath));
 
-// Catch-all for SPA routing (HashRouter)
+// Catch-all for SPA routing
 app.get('*', (req, res) => {
   res.sendFile(path.join(distPath, 'index.html'));
 });
 
 app.listen(PORT, () => {
-  console.log(`\n--- STUDIOS STITCH TERMINAL ACTIVATED ---`);
-  console.log(`Port: ${PORT}`);
-  console.log(`API Root: https://studiosstitch.com/api`);
-  console.log(`Webhook: https://studiosstitch.com/api/stripe/webhook`);
-  console.log(`------------------------------------------\n`);
+  console.log(`\n[STUDIOS STITCH TERMINAL]`);
+  console.log(`Local: http://localhost:${PORT}`);
+  console.log(`Web: https://studiosstitch.com`);
+  console.log(`Stripe Webhook Target: https://studiosstitch.com/api/stripe/webhook`);
+  console.log(`Status: ONLINE\n`);
 });
