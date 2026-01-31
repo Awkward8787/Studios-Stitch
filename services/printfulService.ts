@@ -1,87 +1,43 @@
 
 import { Product, ProductVariant } from '../types';
 
-/**
- * PRINTFUL API CONFIGURATION
- */
-
-const PRINTFUL_API_URL = 'https://api.printful.com';
-const PROXY_URL = 'https://corsproxy.io/?';
-
 class PrintfulService {
-  private activeStoreId: string | null = null;
-
-  private getApiKey(): string {
-    // Priority: environment variable, then hardcoded fallback
-    return process.env.PRINTFUL_API_KEY || 'KwSxNJ1mHlNYUJZ57eqOIAXQXQ9250Q19a2CHEas';
-  }
-
-  private async proxyFetch(endpoint: string, storeId?: string) {
-    const targetUrl = `${PRINTFUL_API_URL}${endpoint}`;
-    const proxiedUrl = `${PROXY_URL}${encodeURIComponent(targetUrl)}`;
-    
-    const headers: Record<string, string> = {
-      'Authorization': `Bearer ${this.getApiKey()}`,
-      'Accept': 'application/json',
-      'Content-Type': 'application/json'
-    };
-
-    if (storeId) {
-      headers['X-PF-Store-Id'] = storeId;
-    }
-
+  private async apiFetch(endpoint: string) {
     try {
-      const response = await fetch(proxiedUrl, {
+      // Points to our local server proxy /api/printful/...
+      const response = await fetch(endpoint, {
         method: 'GET',
-        headers
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        }
       });
 
       const data = await response.json();
 
       if (!response.ok) {
-        const errorMsg = data.error?.message || `API Error: ${response.status}`;
-        console.error('Printful API Error:', data.error);
-        throw new Error(errorMsg);
+        throw new Error(data.error || `Proxy Error: ${response.status}`);
       }
 
       return data;
     } catch (err: any) {
-      console.error('Fetch error:', err.message);
+      console.error('Printful Proxy Fetch failure:', err.message);
       throw err;
-    }
-  }
-
-  private async findCompatibleStore(): Promise<string> {
-    try {
-      const data = await this.proxyFetch('/stores');
-      const stores = data.result || [];
-      const apiStore = stores.find((s: any) => s.type === 'api' || s.type === 'manual');
-      if (!apiStore) {
-        if (stores.length > 0) return stores[0].id.toString();
-        throw new Error("NO_STORES_FOUND");
-      }
-      return apiStore.id.toString();
-    } catch (err: any) {
-      console.warn("Printful Store lookup failed. Ensure PRINTFUL_API_KEY is valid and connected to a store.");
-      throw new Error("PRINTFUL_SETUP_REQUIRED");
     }
   }
 
   async fetchProducts(): Promise<Product[]> {
     try {
-      if (!this.activeStoreId) {
-        this.activeStoreId = await this.findCompatibleStore();
-      }
-
-      const data = await this.proxyFetch('/store/products', this.activeStoreId);
+      const data = await this.apiFetch('/api/printful/products');
       const rawProducts = data.result || [];
 
       if (rawProducts.length === 0) {
-        console.warn("Printful API: No sync products found in store.");
+        console.warn("Printful Proxy: No products returned.");
         return [];
       }
 
       const products: Product[] = [];
+      // Fetch details for the first 12 products
       const productsToFetch = rawProducts.slice(0, 12);
       
       for (const p of productsToFetch) {
@@ -89,21 +45,20 @@ class PrintfulService {
           const detail = await this.getProduct(p.id.toString());
           if (detail) products.push(detail);
         } catch (e) {
-          console.warn(`Skipping product detail fetch for ID: ${p.id}`);
+          console.warn(`Skipping detail for ID: ${p.id}`);
         }
       }
 
       return products;
     } catch (error: any) {
       console.error('Printful Service Failure:', error);
-      // Return empty array instead of throwing to prevent App-level crash
       return [];
     }
   }
 
   async getProduct(id: string): Promise<Product | undefined> {
     try {
-      const data = await this.proxyFetch(`/store/products/${id}`, this.activeStoreId || undefined);
+      const data = await this.apiFetch(`/api/printful/products/${id}`);
       if (!data.result) return undefined;
 
       const { sync_product, sync_variants } = data.result;
