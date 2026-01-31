@@ -5,9 +5,19 @@ import { Product } from '../types';
 
 interface ProductCardProps {
   product: Product;
+  onAddToCart?: (product: Product, size: string) => void;
 }
 
-const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
+const ProductCard: React.FC<ProductCardProps> = ({ product, onAddToCart }) => {
+  const handleQuickAdd = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (onAddToCart && product.variants.length > 0) {
+      // Add the first available variant (default)
+      onAddToCart(product, product.variants[0].size);
+    }
+  };
+
   return (
     <div className="relative group perspective-1000">
       <Link 
@@ -26,6 +36,19 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
           {/* Fuchsia Accent on Hover */}
           <div className="absolute inset-0 bg-fuchsia-studio opacity-0 group-hover:opacity-10 transition-opacity pointer-events-none" />
           
+          {/* Quick Add Button */}
+          {onAddToCart && (
+            <button 
+              onClick={handleQuickAdd}
+              className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-fuchsia-studio text-white p-3 rounded-full shadow-xl opacity-0 translate-y-4 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300 hover:scale-110 z-30"
+              title="Quick Add to Bag"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/><line x1="12" y1="13" x2="12" y2="19"/><line x1="9" y1="16" x2="15" y2="16"/>
+              </svg>
+            </button>
+          )}
+
           {/* Internal Wound Stitches */}
           <div className="absolute top-4 left-4 text-white text-[12px] font-black opacity-0 group-hover:opacity-100 transition-all duration-500">×</div>
           <div className="absolute bottom-4 right-4 text-white text-[12px] font-black opacity-0 group-hover:opacity-100 transition-all duration-500">×</div>

@@ -22,8 +22,10 @@ class StripeService {
       throw new Error("STRIPE_NOT_CONFIGURED");
     }
 
-    console.log('Initiating Secure Stripe Session...');
+    console.warn('STUDIO_STITCH: Attempting Checkout Bridge...');
+    console.info('IMPLEMENTATION_NOTE: In production, you must call a secure server-side endpoint (e.g. Supabase Edge Function) to create a real Stripe Session using your Secret Key.');
 
+    // Simulate the redirect for demo purposes
     const isProduction = window.location.hostname === 'www.studiosstitch.com';
     const baseUrl = isProduction 
       ? 'https://www.studiosstitch.com/' 
@@ -31,12 +33,10 @@ class StripeService {
     
     const successUrl = `${baseUrl}#/checkout-success`;
     
-    // In a real environment, you'd send items to your backend to get a sessionId
-    // For this bridge, we provide the success URL to simulate completion
     return new Promise((resolve) => {
       setTimeout(() => {
         resolve({ url: successUrl });
-      }, 1000);
+      }, 1500);
     });
   }
 

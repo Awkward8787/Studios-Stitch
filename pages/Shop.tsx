@@ -5,9 +5,10 @@ import ProductCard from '../components/ProductCard';
 
 interface ShopProps {
   products: Product[];
+  onAddToCart: (product: Product, size: string) => void;
 }
 
-const Shop: React.FC<ShopProps> = ({ products }) => {
+const Shop: React.FC<ShopProps> = ({ products, onAddToCart }) => {
   const [activeCategory, setActiveCategory] = useState('All');
   const categories = ['All', 'Essentials', 'New Arrivals', 'Archive'];
 
@@ -46,7 +47,7 @@ const Shop: React.FC<ShopProps> = ({ products }) => {
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-12">
           {filteredProducts.map(product => (
-            <ProductCard key={product.id} product={product} />
+            <ProductCard key={product.id} product={product} onAddToCart={onAddToCart} />
           ))}
         </div>
       )}

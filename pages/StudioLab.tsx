@@ -1,13 +1,18 @@
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { geminiService } from '../services/geminiService';
+import ApiKeySelection from '../components/ApiKeySelection';
 
 const StudioLab: React.FC = () => {
+  const [hasKey, setHasKey] = useState(false);
   const [activeTab, setActiveTab] = useState<'generate' | 'edit' | 'analyze'>('generate');
   const [loading, setLoading] = useState(false);
   const [resultImage, setResultImage] = useState<string | null>(null);
   const [analysis, setAnalysis] = useState<{ text: string, sources?: any[] } | null>(null);
+  const [logs, setLogs] = useState<string[]>(["SYSTEM_IDLE: Awaiting input signal..."]);
   
+  const addLog = (msg: string) => setLogs(prev => [...prev.slice(-4), `> ${msg}`]);
+
   // Generation State
   const [genPrompt, setGenPrompt] = useState('');
   const [aspectRatio, setAspectRatio] = useState('1:1');
@@ -21,6 +26,7 @@ const StudioLab: React.FC = () => {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      addLog(`ASSET_LOADED: ${file.name}`);
       const reader = new FileReader();
       reader.onloadend = () => setSelectedFile(reader.result as string);
       reader.readAsDataURL(file);
@@ -30,11 +36,17 @@ const StudioLab: React.FC = () => {
   const handleGenerate = async () => {
     setLoading(true);
     setResultImage(null);
+    addLog(`INIT_GENERATION: Prompt received...`);
+    addLog(`MODEL_SYNC: Handshaking with Gemini 3 Pro...`);
     try {
       const img = await geminiService.generateImage(genPrompt, { aspectRatio, imageSize });
       setResultImage(img);
-    } catch (err) {
-      alert("Generation failed. Ensure you have selected an API key if required.");
+      addLog(`PROCESS_COMPLETE: Reconstruction successful.`);
+    } catch (err: any) {
+      addLog(`ERROR: Protocol failure. ${err.message}`);
+      if (err.message?.includes("Requested entity was not found")) {
+         setHasKey(false);
+      }
     } finally {
       setLoading(false);
     }
@@ -43,11 +55,13 @@ const StudioLab: React.FC = () => {
   const handleEdit = async () => {
     if (!selectedFile) return;
     setLoading(true);
+    addLog(`INIT_SURGERY: Analyzing base mesh...`);
     try {
       const img = await geminiService.editImage(selectedFile, editPrompt);
       setResultImage(img);
+      addLog(`PROCESS_COMPLETE: Object modified.`);
     } catch (err) {
-      alert("Edit failed.");
+      addLog(`ERROR: Surgery failed.`);
     } finally {
       setLoading(false);
     }
@@ -57,11 +71,13 @@ const StudioLab: React.FC = () => {
     if (!selectedFile) return;
     setLoading(true);
     setAnalysis(null);
+    addLog(`INIT_VISION: Running diagnostic scan...`);
     try {
       const text = await geminiService.analyzeImage(selectedFile);
       setAnalysis({ text });
+      addLog(`PROCESS_COMPLETE: Diagnostics available.`);
     } catch (err) {
-      alert("Analysis failed.");
+      addLog(`ERROR: Scan interrupted.`);
     } finally {
       setLoading(false);
     }
@@ -69,15 +85,25 @@ const StudioLab: React.FC = () => {
 
   const handleTrendSearch = async () => {
     setLoading(true);
+    addLog(`INIT_SEARCH: Accessing global data nodes...`);
     try {
       const data = await geminiService.getTrends(genPrompt || "streetwear 2024");
       setAnalysis(data);
+      addLog(`PROCESS_COMPLETE: Grounding sources found.`);
     } catch (err) {
-      alert("Trend search failed.");
+      addLog(`ERROR: Data fetch failed.`);
     } finally {
       setLoading(false);
     }
   };
+
+  if (!hasKey) {
+    return (
+      <div className="min-h-screen pt-48 px-6">
+        <ApiKeySelection onSuccess={() => setHasKey(true)} />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen pt-24 pb-48 px-6 max-w-7xl mx-auto">
@@ -123,7 +149,7 @@ const StudioLab: React.FC = () => {
                     value={aspectRatio}
                     onChange={e => setAspectRatio(e.target.value)}
                   >
-                    {['1:1', '2:3', '3:2', '3:4', '4:3', '9:16', '16:9', '21:9'].map(r => <option key={r} value={r}>{r}</option>)}
+                    {['1:1', '3:4', '4:3', '9:16', '16:9'].map(r => <option key={r} value={r}>{r}</option>)}
                   </select>
                 </div>
                 <div className="space-y-2">
@@ -208,6 +234,13 @@ const StudioLab: React.FC = () => {
               )}
             </div>
           )}
+
+          {/* Terminal Logs */}
+          <div className="bg-black border border-zinc-900 p-6 font-mono text-[9px] text-zinc-500 space-y-2 uppercase tracking-widest">
+            {logs.map((log, i) => (
+              <div key={i} className={i === logs.length - 1 ? 'text-fuchsia-studio' : ''}>{log}</div>
+            ))}
+          </div>
         </div>
 
         {/* Right: Output */}

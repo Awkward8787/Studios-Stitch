@@ -232,8 +232,8 @@ const AppContent: React.FC = () => {
 
       <main>
         <Routes>
-          <Route path="/" element={<Home products={products} />} />
-          <Route path="/shop" element={<Shop products={products} />} />
+          <Route path="/" element={<Home products={products} onAddToCart={handleAddToCart} />} />
+          <Route path="/shop" element={<Shop products={products} onAddToCart={handleAddToCart} />} />
           <Route path="/collections" element={<Collections />} />
           <Route path="/product/:id" element={<ProductDetailWrapper onAddToCart={handleAddToCart} />} />
           <Route path="/admin" element={user?.role === 'admin' ? <Admin /> : <Navigate to="/" />} />

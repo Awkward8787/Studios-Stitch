@@ -6,9 +6,10 @@ import ProductCard from '../components/ProductCard';
 
 interface HomeProps {
   products: Product[];
+  onAddToCart: (product: Product, size: string) => void;
 }
 
-const Home: React.FC<HomeProps> = ({ products }) => {
+const Home: React.FC<HomeProps> = ({ products, onAddToCart }) => {
   return (
     <div className="flex flex-col">
       {/* Hero Section */}
@@ -105,7 +106,7 @@ const Home: React.FC<HomeProps> = ({ products }) => {
         
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {products.slice(0, 4).map(product => (
-            <ProductCard key={product.id} product={product} />
+            <ProductCard key={product.id} product={product} onAddToCart={onAddToCart} />
           ))}
         </div>
       </section>
