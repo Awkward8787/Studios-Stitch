@@ -16,7 +16,6 @@ import Collections from './pages/Collections';
 import ProductDetail from './pages/ProductDetail';
 import Admin from './pages/Admin';
 import Setup from './pages/Setup';
-import StudioLab from './pages/StudioLab';
 
 const Footer: React.FC = () => (
   <footer className="bg-black border-t border-zinc-900 py-24 px-6 mt-24 relative overflow-hidden">
@@ -51,7 +50,6 @@ const Footer: React.FC = () => (
           <li><a href="#" className="hover:text-fuchsia-studio transition-colors">Support Portal</a></li>
           <li><Link to="/admin" className="hover:text-fuchsia-studio transition-colors">Admin Access</Link></li>
           <li><Link to="/setup" className="hover:text-fuchsia-studio transition-colors">Config Console</Link></li>
-          <li><Link to="/lab" className="hover:text-fuchsia-studio transition-colors">Studio Lab</Link></li>
         </ul>
       </div>
     </div>
@@ -121,7 +119,7 @@ const CheckoutSuccess: React.FC = () => (
     </div>
     <div className="space-y-4">
       <h2 className="text-5xl font-black uppercase tracking-tighter italic">Transaction Verified</h2>
-      <p className="text-zinc-500 uppercase tracking-[0.3em] text-[10px] font-bold">Deployment of objects initiated. Status: Pending.</p>
+      <p className="text-zinc-500 uppercase tracking-[0.3em] text-[10px] font-bold">Deployment of objects initiated. Status: Processing.</p>
     </div>
     <Link to="/shop" className="inline-block border border-zinc-800 px-12 py-5 text-[10px] uppercase font-black tracking-[0.4em] hover:bg-white hover:text-black transition-all">
       Return to Terminal
@@ -186,16 +184,6 @@ const AppContent: React.FC = () => {
 
     setIsProcessing(true);
     try {
-      const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-      
-      if (configService.isConfigured()) {
-        await supabaseService.createOrder({
-          customer_email: user.email,
-          items: cart,
-          total
-        });
-      }
-
       const { url } = await stripeService.createCheckoutSession(cart, user.email);
       window.location.href = url;
     } catch (err: any) {
@@ -238,7 +226,6 @@ const AppContent: React.FC = () => {
           <Route path="/product/:id" element={<ProductDetailWrapper onAddToCart={handleAddToCart} />} />
           <Route path="/admin" element={user?.role === 'admin' ? <Admin /> : <Navigate to="/" />} />
           <Route path="/setup" element={<Setup />} />
-          <Route path="/lab" element={<StudioLab />} />
           <Route path="/auth" element={<AuthPage onAuthSuccess={setUser} />} />
           <Route path="/checkout-success" element={<CheckoutSuccess />} />
         </Routes>

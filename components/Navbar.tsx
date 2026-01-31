@@ -38,10 +38,6 @@ const Navbar: React.FC<NavbarProps> = ({ cartCount, onCartToggle, userEmail, onL
                 Series
                 {location.pathname === '/collections' && <div className="absolute -bottom-1 left-0 w-full h-[1px] bg-fuchsia-studio" />}
               </Link>
-              <Link to="/lab" className={`hover:text-fuchsia-studio transition-all relative ${location.pathname === '/lab' ? 'text-fuchsia-studio' : ''}`}>
-                Lab
-                {location.pathname === '/lab' && <div className="absolute -bottom-1 left-0 w-full h-[1px] bg-fuchsia-studio" />}
-              </Link>
             </nav>
           </div>
           

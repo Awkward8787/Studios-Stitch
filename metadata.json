@@ -1,7 +1,5 @@
 {
   "name": "Studios Stitch",
-  "description": "Premium 3D-modeled streetwear essentials. High-impact dark mode aesthetic with industrial stitching and fuchsia accents. Featuring Studio Lab AI creative suite.",
-  "requestFramePermissions": [
-    "camera"
-  ]
+  "description": "Premium 3D-modeled streetwear essentials. High-impact dark mode aesthetic with industrial stitching and fuchsia accents.",
+  "requestFramePermissions": []
 }

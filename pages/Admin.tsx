@@ -2,12 +2,10 @@
 import React, { useState, useEffect } from 'react';
 import { Order } from '../types';
 import { supabaseService } from '../services/supabaseService';
-import { geminiService } from '../services/geminiService';
 
 const Admin: React.FC = () => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
-  const [aiLoading, setAiLoading] = useState(false);
 
   useEffect(() => {
     const fetchOrders = async () => {
@@ -21,21 +19,6 @@ const Admin: React.FC = () => {
   const handleUpdateStatus = async (id: string, status: Order['status']) => {
     await supabaseService.updateOrderStatus(id, status);
     setOrders(prev => prev.map(o => o.id === id ? { ...o, status } : o));
-  };
-
-  const generateGhostMockup = async (orderItem: any) => {
-    setAiLoading(true);
-    try {
-      const prompt = `Convert this T-shirt image into a high-quality professional ghost mannequin mockup on a solid black background. Remove any hangers or flat-lay wrinkles. Make it look like it's being worn by an invisible person. High studio lighting.`;
-      const result = await geminiService.editImage(orderItem.thumbnail_url, prompt);
-      // In a real app, you would now save this back to the product record
-      console.log("Mockup generated:", result);
-      alert("AI Ghost Protocol Successful. Check console for output.");
-    } catch (err) {
-      alert("AI generation failed. Check API configuration.");
-    } finally {
-      setAiLoading(false);
-    }
   };
 
   const stats = {
@@ -52,12 +35,6 @@ const Admin: React.FC = () => {
         <div>
           <h1 className="text-4xl font-bold uppercase tracking-tighter italic">Terminal</h1>
           <p className="text-zinc-500 text-sm mt-2 uppercase tracking-widest">Global Order & Logistics Center</p>
-        </div>
-        <div className="flex gap-4">
-           <div className="text-right">
-              <p className="text-[10px] font-black text-fuchsia-studio uppercase tracking-widest animate-pulse">Neural Link Active</p>
-              <p className="text-[8px] text-zinc-700 uppercase tracking-widest">Protocol: Gemini-3-Flash</p>
-           </div>
         </div>
       </div>
 
@@ -106,15 +83,7 @@ const Admin: React.FC = () => {
                     <div className="flex gap-2">
                        {order.items.map((item, i) => (
                          <div key={i} className="group relative">
-                           <img src={item.thumbnail_url} className="w-8 h-10 object-cover border border-zinc-700 hover:border-fuchsia-studio transition-all cursor-pointer" />
-                           <button 
-                             onClick={() => generateGhostMockup(item)}
-                             disabled={aiLoading}
-                             className="absolute -top-2 -right-2 bg-fuchsia-studio text-white p-1 rounded-sm opacity-0 group-hover:opacity-100 transition-opacity"
-                             title="Trigger Ghost Protocol"
-                           >
-                             <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>
-                           </button>
+                           <img src={item.thumbnail_url} className="w-8 h-10 object-cover border border-zinc-700 transition-all" />
                          </div>
                        ))}
                     </div>

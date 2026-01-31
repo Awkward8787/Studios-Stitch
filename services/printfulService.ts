@@ -4,7 +4,6 @@ import { Product, ProductVariant } from '../types';
 class PrintfulService {
   private async apiFetch(endpoint: string) {
     try {
-      // Points to our local server proxy /api/printful/...
       const response = await fetch(endpoint, {
         method: 'GET',
         headers: {
@@ -13,15 +12,24 @@ class PrintfulService {
         }
       });
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || `Proxy Error: ${response.status}`);
+      const rawText = await response.text();
+      const contentType = response.headers.get('content-type');
+      
+      // If we got a 404 text string, the Node.js app is likely being bypassed
+      if (response.status === 404 && !contentType?.includes('json')) {
+        console.error('CRITICAL: Request reached a 404 page, not the API. Check Hostinger configuration.');
+        throw new Error(`The server returned a 404 error page. Check if the 'api' folder exists or if the application is correctly mapped to the root domain.`);
       }
 
-      return data;
+      if (contentType && contentType.includes('application/json')) {
+        const data = JSON.parse(rawText);
+        if (!response.ok) throw new Error(data.error || `Error ${response.status}`);
+        return data;
+      } else {
+        throw new Error(`Unexpected server response type: ${contentType}. Body: ${rawText.substring(0, 100)}`);
+      }
     } catch (err: any) {
-      console.error('Printful Proxy Fetch failure:', err.message);
+      console.error('STITCH_TERMINAL_FETCH_ERR:', err.message);
       throw err;
     }
   }
@@ -29,29 +37,19 @@ class PrintfulService {
   async fetchProducts(): Promise<Product[]> {
     try {
       const data = await this.apiFetch('/api/printful/products');
-      const rawProducts = data.result || [];
-
-      if (rawProducts.length === 0) {
-        console.warn("Printful Proxy: No products returned.");
-        return [];
-      }
+      const rawProducts = data?.result || [];
+      if (rawProducts.length === 0) return [];
 
       const products: Product[] = [];
-      // Fetch details for the first 12 products
       const productsToFetch = rawProducts.slice(0, 12);
       
       for (const p of productsToFetch) {
-        try {
-          const detail = await this.getProduct(p.id.toString());
-          if (detail) products.push(detail);
-        } catch (e) {
-          console.warn(`Skipping detail for ID: ${p.id}`);
-        }
+        const detail = await this.getProduct(p.id.toString());
+        if (detail) products.push(detail);
       }
-
       return products;
     } catch (error: any) {
-      console.error('Printful Service Failure:', error);
+      console.error('Inventory Sync Failure:', error.message);
       return [];
     }
   }
@@ -59,53 +57,41 @@ class PrintfulService {
   async getProduct(id: string): Promise<Product | undefined> {
     try {
       const data = await this.apiFetch(`/api/printful/products/${id}`);
-      if (!data.result) return undefined;
+      if (!data?.result) return undefined;
 
       const { sync_product, sync_variants } = data.result;
-
       const allImages = new Set<string>();
-      let ghostMockupUrl = sync_product.thumbnail_url;
+      let primaryImg = sync_product.thumbnail_url;
       
-      const variantImages: string[] = [];
       sync_variants.forEach((v: any) => {
         v.files?.forEach((f: any) => {
           if (f.type === 'preview' && f.preview_url) {
-            variantImages.push(f.preview_url);
             allImages.add(f.preview_url);
+            if (!primaryImg) primaryImg = f.preview_url;
           }
         });
       });
 
-      if (variantImages.length > 0) {
-        ghostMockupUrl = variantImages[0];
-      }
-
-      const variants: ProductVariant[] = sync_variants.map((v: any) => {
-        const nameParts = v.name.split(' - ');
-        const optionParts = nameParts[1]?.split(' / ') || [];
-        
-        return {
-          id: v.id.toString(),
-          name: v.name,
-          size: v.size || optionParts[1] || optionParts[0] || 'OS',
-          color: v.color || optionParts[0] || 'Standard',
-          price: v.retail_price,
-          retail_price: v.retail_price
-        };
-      });
+      const variants: ProductVariant[] = sync_variants.map((v: any) => ({
+        id: v.id.toString(),
+        name: v.name,
+        size: v.size || 'OS',
+        color: v.color || 'Standard',
+        price: v.retail_price,
+        retail_price: v.retail_price
+      }));
 
       return {
         id: sync_product.id.toString(),
         external_id: sync_product.external_id || '',
         name: sync_product.name,
         price: parseFloat(sync_variants[0]?.retail_price || '0'),
-        description: sync_product.description || "Premium studio essential. High-density textile assembly.",
-        thumbnail_url: ghostMockupUrl,
+        description: sync_product.description || "Premium studio essential.",
+        thumbnail_url: primaryImg,
         images: Array.from(allImages),
         variants
       };
     } catch (error) {
-      console.error(`Error fetching product ${id}:`, error);
       return undefined;
     }
   }

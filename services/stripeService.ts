@@ -17,33 +17,24 @@ class StripeService {
   }
 
   async createCheckoutSession(items: CartItem[], customerEmail: string): Promise<{ url: string }> {
-    const { stripePublicKey } = configService.getConfig();
-    if (!stripePublicKey) {
-      throw new Error("STRIPE_NOT_CONFIGURED");
+    const response = await fetch('/api/checkout/create-session', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ items, customerEmail })
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Failed to initialize checkout session.');
     }
 
-    console.warn('STUDIO_STITCH: Attempting Checkout Bridge...');
-    console.info('IMPLEMENTATION_NOTE: In production, you must call a secure server-side endpoint (e.g. Supabase Edge Function) to create a real Stripe Session using your Secret Key.');
-
-    // Simulate the redirect for demo purposes
-    const isProduction = window.location.hostname === 'www.studiosstitch.com';
-    const baseUrl = isProduction 
-      ? 'https://www.studiosstitch.com/' 
-      : window.location.origin + window.location.pathname;
-    
-    const successUrl = `${baseUrl}#/checkout-success`;
-    
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        resolve({ url: successUrl });
-      }, 1500);
-    });
+    return await response.json();
   }
 
   async testConnection(): Promise<boolean> {
     try {
-      const stripe = await this.getStripe();
-      return !!stripe;
+      const { stripePublicKey } = configService.getConfig();
+      return !!stripePublicKey;
     } catch {
       return false;
     }

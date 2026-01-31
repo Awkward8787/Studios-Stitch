@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Product } from '../types';
 
@@ -9,6 +9,8 @@ interface ProductCardProps {
 }
 
 const ProductCard: React.FC<ProductCardProps> = ({ product, onAddToCart }) => {
+  const [imageError, setImageError] = useState(false);
+
   const handleQuickAdd = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -26,18 +28,32 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onAddToCart }) => {
       >
         <div className="aspect-[3/4] overflow-hidden relative p-1 bg-black preserve-3d">
           <div className="w-full h-full transition-transform duration-1000 group-hover:ghost-spin-active">
-            <img 
-              src={product.thumbnail_url} 
-              alt={product.name} 
-              className="w-full h-full object-cover grayscale transition-all duration-1000 group-hover:grayscale-0 group-hover:scale-105"
-            />
+            {imageError ? (
+              <div className="w-full h-full flex flex-col items-center justify-center bg-zinc-900 border border-zinc-800 p-8 text-center">
+                <div className="mb-4">
+                  <span className="text-fuchsia-studio text-4xl font-black italic">×</span>
+                </div>
+                <div className="space-y-2">
+                  <span className="block text-[8px] font-black uppercase tracking-[0.4em] text-zinc-500">Asset Sync Failure</span>
+                  <div className="h-[1px] w-8 bg-zinc-800 mx-auto" />
+                  <span className="block text-[7px] font-mono text-zinc-700 uppercase tracking-widest">ID: {product.id.slice(0, 8)}</span>
+                </div>
+              </div>
+            ) : (
+              <img 
+                src={product.thumbnail_url} 
+                alt={product.name} 
+                onError={() => setImageError(true)}
+                className="w-full h-full object-cover grayscale transition-all duration-1000 group-hover:grayscale-0 group-hover:scale-105"
+              />
+            )}
           </div>
           
           {/* Fuchsia Accent on Hover */}
           <div className="absolute inset-0 bg-fuchsia-studio opacity-0 group-hover:opacity-10 transition-opacity pointer-events-none" />
           
           {/* Quick Add Button */}
-          {onAddToCart && (
+          {onAddToCart && !imageError && (
             <button 
               onClick={handleQuickAdd}
               className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-fuchsia-studio text-white p-3 rounded-full shadow-xl opacity-0 translate-y-4 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300 hover:scale-110 z-30"
@@ -68,7 +84,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onAddToCart }) => {
             <p className="text-zinc-400 text-[10px] font-black uppercase tracking-[0.2em]">$ {product.price.toFixed(2)}</p>
             <div className="overflow-hidden">
                <span className="text-black text-[9px] font-black uppercase tracking-widest transform translate-y-full group-hover:translate-y-0 transition-transform block">
-                 Deploy Object
+                 {imageError ? 'Corrupted Data' : 'Deploy Object'}
                </span>
             </div>
           </div>
