@@ -4,7 +4,6 @@ import { Product, ProductVariant } from '../types';
 class PrintfulService {
   private async apiFetch(endpoint: string) {
     try {
-      // Use absolute path to ensure we hit the backend correctly
       const url = endpoint.startsWith('http') ? endpoint : `${window.location.origin}${endpoint}`;
       
       const response = await fetch(url, {
@@ -18,18 +17,29 @@ class PrintfulService {
 
       const contentType = response.headers.get('content-type');
       
-      // Critical Check: If Hostinger returns HTML instead of JSON for an API call, it's a 404/Misconfig
       if (contentType && contentType.includes('text/html')) {
-        console.error('STITCH_TERMINAL: Received HTML instead of JSON. The request likely hit a Hostinger 404 page or a redirect.');
-        throw new Error("404: Node.js API not reached. Check Hostinger Node.js Dashboard status.");
+        throw new Error("SERVER_MISCONFIG: Received HTML instead of JSON. Check backend routing.");
       }
 
       const data = await response.json();
-      if (!response.ok) throw new Error(data.error || `Server Error ${response.status}`);
+      if (!response.ok) {
+        // Pass through specific auth errors
+        if (response.status === 401) throw new Error('PRINTFUL_AUTH_FAILED');
+        throw new Error(data.error || `Server Error ${response.status}`);
+      }
       return data;
     } catch (err: any) {
-      console.error('STITCH_FETCH_ERROR:', err.message);
+      console.error('STITCH_PROTOCOL_FAILURE:', err.message);
       throw err;
+    }
+  }
+
+  async testConnection() {
+    try {
+      const data = await this.apiFetch('/api/health');
+      return data.bridge?.printful === 'connected';
+    } catch {
+      return false;
     }
   }
 
@@ -40,69 +50,62 @@ class PrintfulService {
       const rawProducts = data?.result || [];
       
       if (rawProducts.length === 0) {
-        console.warn('STITCH_TERMINAL: Sync complete. Result: 0 items found in the Printful store.');
+        console.warn('STITCH_TERMINAL: Store returned 0 sync products.');
         return [];
       }
 
-      console.log(`STITCH_TERMINAL: Found ${rawProducts.length} items. Processing metadata...`);
-      
-      const products: Product[] = [];
-      // We limit to the first 12 to ensure fast initial load
-      const productsToFetch = rawProducts.slice(0, 12);
-      
-      // Use Promise.all to fetch details in parallel for better performance
+      const productsToFetch = rawProducts.slice(0, 16);
       const detailPromises = productsToFetch.map((p: any) => this.getProduct(p.id.toString()));
-      const results = await Promise.all(detailPromises);
-      
-      return results.filter((p): p is Product => p !== undefined);
-    } catch (error: any) {
-      console.error('STITCH_SYNC_FAILURE:', error.message);
-      return [];
+      const products = await Promise.all(detailPromises);
+      return products.filter((p): p is Product => p !== null);
+    } catch (err: any) {
+      if (err.message === 'PRINTFUL_AUTH_FAILED') {
+        console.error('STITCH_TERMINAL: Printful authentication failed. Check your token.');
+      }
+      throw err;
     }
   }
 
-  async getProduct(id: string): Promise<Product | undefined> {
+  async getProduct(id: string): Promise<Product | null> {
     try {
       const data = await this.apiFetch(`/api/printful/products/${id}`);
-      if (!data?.result) return undefined;
+      const result = data.result;
+      if (!result) return null;
 
-      const { sync_product, sync_variants } = data.result;
-      if (!sync_product || !sync_variants) return undefined;
+      const syncProduct = result.sync_product;
+      const syncVariants = result.sync_variants || [];
 
-      const allImages = new Set<string>();
-      let primaryImg = sync_product.thumbnail_url;
-      
-      sync_variants.forEach((v: any) => {
+      const images: string[] = [];
+      syncVariants.forEach((v: any) => {
         v.files?.forEach((f: any) => {
-          if ((f.type === 'preview' || f.type === 'mockup') && f.preview_url) {
-            allImages.add(f.preview_url);
-            if (!primaryImg) primaryImg = f.preview_url;
+          if (f.type === 'preview' && f.preview_url && !images.includes(f.preview_url)) {
+            images.push(f.preview_url);
           }
         });
       });
 
-      const variants: ProductVariant[] = sync_variants.map((v: any) => ({
+      const variants: ProductVariant[] = syncVariants.map((v: any) => ({
         id: v.id.toString(),
         name: v.name,
         size: v.size || 'OS',
-        color: v.color || 'Standard',
+        color: v.color || 'N/A',
         price: v.retail_price,
         retail_price: v.retail_price
       }));
 
       return {
-        id: sync_product.id.toString(),
-        external_id: sync_product.external_id || '',
-        name: sync_product.name,
-        price: parseFloat(sync_variants[0]?.retail_price || '0'),
-        description: sync_product.description || "Premium studio essential.",
-        thumbnail_url: primaryImg || sync_product.thumbnail_url,
-        images: Array.from(allImages),
+        id: syncProduct.id.toString(),
+        external_id: syncProduct.external_id,
+        name: syncProduct.name,
+        price: parseFloat(syncVariants[0]?.retail_price || '0'),
+        description: syncProduct.description || `STITCH_ARCHIVE_UNIT_${syncProduct.id}. Engineered for modern utility.`,
+        thumbnail_url: syncProduct.thumbnail_url || images[0] || '',
+        images: images.length > 0 ? images : [syncProduct.thumbnail_url],
         variants
       };
-    } catch (error) {
-      console.error(`STITCH_PRODUCT_ERR [${id}]:`, error);
-      return undefined;
+    } catch (err) {
+      console.error(`STITCH_TERMINAL: Failed to fetch product ${id}`, err);
+      return null;
     }
   }
 }

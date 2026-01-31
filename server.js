@@ -13,6 +13,7 @@ const app = express();
 const PORT = process.env.PORT || 3001;
 
 // --- CONFIGURATION ---
+// Clean the token of any accidental quotes or spaces from copy-paste
 const PRINTFUL_TOKEN = (process.env.PRINTFUL_TOKEN || '').trim().replace(/["']/g, '');
 const STRIPE_SECRET_KEY = (process.env.STRIPE_SECRET_KEY || '').trim();
 const STRIPE_WEBHOOK_SECRET = (process.env.STRIPE_WEBHOOK_SECRET || '').trim();
@@ -52,7 +53,6 @@ app.post('/api/stripe/webhook', express.raw({ type: 'application/json' }), async
 app.use(cors());
 app.use(express.json());
 
-// Add Cache-Control to prevent Hostinger/LiteSpeed from caching API 404s
 app.use('/api', (req, res, next) => {
   res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
   res.setHeader('Pragma', 'no-cache');
@@ -62,7 +62,10 @@ app.use('/api', (req, res, next) => {
 
 // --- PRINTFUL LOGIC ---
 async function fetchFromPrintful(endpoint, method = 'GET', body = null) {
-  if (!PRINTFUL_TOKEN) throw new Error('PRINTFUL_TOKEN missing on server environment.');
+  if (!PRINTFUL_TOKEN) {
+    console.error('[PRINTFUL] ERROR: No token found in environment variables.');
+    throw new Error('PRINTFUL_TOKEN_MISSING');
+  }
   
   const url = `https://api.printful.com${endpoint}`;
   const options = {
@@ -75,13 +78,17 @@ async function fetchFromPrintful(endpoint, method = 'GET', body = null) {
   };
   if (body) options.body = JSON.stringify(body);
 
-  console.log(`[PRINTFUL_PROXY] Requesting: ${url}`);
   const response = await fetch(url, options);
-  const data = await response.json();
   
+  // Handle 401 specifically for the user
+  if (response.status === 401) {
+    console.error('[PRINTFUL] ERROR: 401 Unauthorized. Your token is likely invalid.');
+    throw new Error('PRINTFUL_AUTH_FAILED');
+  }
+
+  const data = await response.json();
   if (!response.ok) {
-    console.error(`[PRINTFUL_PROXY] Error ${response.status}:`, data);
-    throw new Error(data?.error?.message || `Printful: ${response.status}`);
+    throw new Error(data?.error?.message || `Printful Error: ${response.status}`);
   }
   return data;
 }
@@ -107,26 +114,39 @@ async function handleSuccessfulPayment(session) {
 }
 
 // --- API ENDPOINTS ---
-app.get('/api/health', (req, res) => {
+app.get('/api/health', async (req, res) => {
+  let printfulStatus = 'unknown';
+  try {
+    if (PRINTFUL_TOKEN) {
+      // Try a tiny request to verify the token is actually valid
+      await fetchFromPrintful('/store-statistics');
+      printfulStatus = 'connected';
+    } else {
+      printfulStatus = 'missing_token';
+    }
+  } catch (err) {
+    printfulStatus = err.message === 'PRINTFUL_AUTH_FAILED' ? 'invalid_token' : 'error';
+  }
+
   res.json({ 
-    status: 'active', 
+    status: 'online', 
     timestamp: new Date().toISOString(),
-    config_check: {
-      printful_loaded: !!PRINTFUL_TOKEN,
-      printful_prefix: PRINTFUL_TOKEN.substring(0, 4) + '...',
-      stripe_loaded: !!stripe
+    bridge: {
+      printful: printfulStatus,
+      stripe: !!stripe,
+      node: process.version
     }
   });
 });
 
 app.get('/api/printful/products', async (req, res) => {
   try {
-    console.log('[API] Fetching products from Printful...');
     const data = await fetchFromPrintful('/store/products');
-    console.log(`[API] Found ${data.result?.length || 0} products.`);
     res.json(data);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(err.message === 'PRINTFUL_AUTH_FAILED' ? 401 : 500).json({ 
+      error: err.message 
+    });
   }
 });
 
@@ -174,12 +194,10 @@ app.post('/api/checkout/create-session', async (req, res) => {
   }
 });
 
-// Explicitly handle 404s for API to avoid serving index.html for missing routes
 app.all('/api/*', (req, res) => {
-  res.status(404).json({ error: `STITCH_TERMINAL: Endpoint ${req.method} ${req.url} not found on this server.` });
+  res.status(404).json({ error: `Route ${req.method} ${req.url} not found.` });
 });
 
-// --- STATIC ASSETS ---
 const distPath = path.resolve(__dirname, 'dist');
 app.use(express.static(distPath));
 
@@ -188,5 +206,5 @@ app.get('*', (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`[STITCH] Terminal running on port ${PORT}`);
+  console.log(`[TERMINAL] Port: ${PORT} | Token Status: ${PRINTFUL_TOKEN ? 'DETECTED' : 'MISSING'}`);
 });
