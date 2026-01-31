@@ -15,21 +15,21 @@ class PrintfulService {
       const rawText = await response.text();
       const contentType = response.headers.get('content-type');
       
-      // If we got a 404 text string, the Node.js app is likely being bypassed
+      // If we got a text 404, LiteSpeed/Hostinger is blocking the request before Node.js sees it
       if (response.status === 404 && !contentType?.includes('json')) {
-        console.error('CRITICAL: Request reached a 404 page, not the API. Check Hostinger configuration.');
-        throw new Error(`The server returned a 404 error page. Check if the 'api' folder exists or if the application is correctly mapped to the root domain.`);
+        console.error('STITCH_CRITICAL: Request hit a 404 page. The Node.js server did not receive this request.');
+        throw new Error(`STITCH_TERMINAL_404: Check that no 'api' folder exists in public_html and ensure Node app is running on Hostinger.`);
       }
 
       if (contentType && contentType.includes('application/json')) {
         const data = JSON.parse(rawText);
-        if (!response.ok) throw new Error(data.error || `Error ${response.status}`);
+        if (!response.ok) throw new Error(data.error || `Server Error ${response.status}`);
         return data;
       } else {
-        throw new Error(`Unexpected server response type: ${contentType}. Body: ${rawText.substring(0, 100)}`);
+        throw new Error(`Protocol Error: Received ${contentType} instead of JSON. Check backend status.`);
       }
     } catch (err: any) {
-      console.error('STITCH_TERMINAL_FETCH_ERR:', err.message);
+      console.error('STITCH_FETCH_FAILURE:', err.message);
       throw err;
     }
   }
