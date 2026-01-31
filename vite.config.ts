@@ -12,7 +12,8 @@ export default defineConfig(({ mode }) => {
     base: '/',
     // Define environment variables so they are available in the browser via process.env
     define: {
-      'process.env.API_KEY': JSON.stringify(env.API_KEY || process.env.API_KEY)
+      'process.env.API_KEY': JSON.stringify(env.API_KEY || env.VITE_GOOGLE_API_KEY || env.GOOGLE_API_KEY || process.env.API_KEY),
+      'process.env.PRINTFUL_API_KEY': JSON.stringify(env.PRINTFUL_API_KEY || 'KwSxNJ1mHlNYUJZ57eqOIAXQXQ9250Q19a2CHEas')
     },
     build: {
       outDir: 'dist',

@@ -6,18 +6,22 @@ import { Product, ProductVariant } from '../types';
  */
 
 const PRINTFUL_API_URL = 'https://api.printful.com';
-const API_KEY = 'KwSxNJ1mHlNYUJZ57eqOIAXQXQ9250Q19a2CHEas';
 const PROXY_URL = 'https://corsproxy.io/?';
 
 class PrintfulService {
   private activeStoreId: string | null = null;
+
+  private getApiKey(): string {
+    // Priority: environment variable, then hardcoded fallback
+    return process.env.PRINTFUL_API_KEY || 'KwSxNJ1mHlNYUJZ57eqOIAXQXQ9250Q19a2CHEas';
+  }
 
   private async proxyFetch(endpoint: string, storeId?: string) {
     const targetUrl = `${PRINTFUL_API_URL}${endpoint}`;
     const proxiedUrl = `${PROXY_URL}${encodeURIComponent(targetUrl)}`;
     
     const headers: Record<string, string> = {
-      'Authorization': `Bearer ${API_KEY}`,
+      'Authorization': `Bearer ${this.getApiKey()}`,
       'Accept': 'application/json',
       'Content-Type': 'application/json'
     };
@@ -58,6 +62,7 @@ class PrintfulService {
       }
       return apiStore.id.toString();
     } catch (err: any) {
+      console.warn("Printful Store lookup failed. Ensure PRINTFUL_API_KEY is valid and connected to a store.");
       throw new Error("PRINTFUL_SETUP_REQUIRED");
     }
   }
@@ -71,7 +76,10 @@ class PrintfulService {
       const data = await this.proxyFetch('/store/products', this.activeStoreId);
       const rawProducts = data.result || [];
 
-      if (rawProducts.length === 0) return [];
+      if (rawProducts.length === 0) {
+        console.warn("Printful API: No sync products found in store.");
+        return [];
+      }
 
       const products: Product[] = [];
       const productsToFetch = rawProducts.slice(0, 12);
@@ -81,14 +89,15 @@ class PrintfulService {
           const detail = await this.getProduct(p.id.toString());
           if (detail) products.push(detail);
         } catch (e) {
-          console.warn(`Skipping product ${p.id}`);
+          console.warn(`Skipping product detail fetch for ID: ${p.id}`);
         }
       }
 
       return products;
     } catch (error: any) {
       console.error('Printful Service Failure:', error);
-      throw error;
+      // Return empty array instead of throwing to prevent App-level crash
+      return [];
     }
   }
 
@@ -99,9 +108,6 @@ class PrintfulService {
 
       const { sync_product, sync_variants } = data.result;
 
-      // Logic to find the "Ghost" 3D Model image
-      // We look through all variants and their files for 'preview' types
-      // Usually, the first 'preview' file is the ghost mannequin mockup
       const allImages = new Set<string>();
       let ghostMockupUrl = sync_product.thumbnail_url;
       
@@ -115,7 +121,6 @@ class PrintfulService {
         });
       });
 
-      // Override primary thumbnail with the first ghost mockup if found
       if (variantImages.length > 0) {
         ghostMockupUrl = variantImages[0];
       }
