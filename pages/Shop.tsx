@@ -40,12 +40,32 @@ const Shop: React.FC<ShopProps> = ({ products, onAddToCart }) => {
         </div>
       </div>
 
-      {filteredProducts.length === 0 ? (
+      {products.length === 0 ? (
+        <div className="py-32 text-center border border-zinc-900 bg-zinc-900/20">
+          <div className="mb-6">
+            <span className="text-fuchsia-studio text-4xl font-black italic">× × ×</span>
+          </div>
+          <p className="text-white uppercase tracking-[0.2em] text-sm font-black">No items retrieved from Archive</p>
+          <div className="mt-4 space-y-2 max-w-md mx-auto">
+            <p className="text-zinc-500 uppercase tracking-widest text-[10px] leading-loose">
+              1. Ensure products are "Synced" in your Printful Dashboard.<br/>
+              2. Verify PRINTFUL_TOKEN in Hostinger Env Variables.<br/>
+              3. Check browser console for STITCH_TERMINAL errors.
+            </p>
+          </div>
+          <button 
+            onClick={() => window.location.reload()}
+            className="mt-8 border border-zinc-800 px-8 py-3 text-[10px] font-black uppercase tracking-widest hover:bg-white hover:text-black transition-all"
+          >
+            Force Sync Reboot
+          </button>
+        </div>
+      ) : filteredProducts.length === 0 ? (
         <div className="py-32 text-center">
           <p className="text-zinc-600 uppercase tracking-widest text-sm">No items found in this category.</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-12">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-12 animate-in fade-in duration-700">
           {filteredProducts.map(product => (
             <ProductCard key={product.id} product={product} onAddToCart={onAddToCart} />
           ))}
