@@ -1,35 +1,38 @@
-<script type="importmap">
-{
-  "imports": {
-    "react": "https://esm.sh/react@^19.2.4",
-    "react-dom/": "https://esm.sh/react-dom@^19.2.4/",
-    "react/": "https://esm.sh/react@^19.2.4/",
-    "@supabase/supabase-js": "https://esm.sh/@supabase/supabase-js@^2.93.3",
-    "@stripe/stripe-js": "https://esm.sh/@stripe/stripe-js@^8.7.0",
-    "react-router-dom": "https://esm.sh/react-router-dom@^7.13.0",
-    "@google/genai": "https://esm.sh/@google/genai@^1.38.0",
-    "vite": "https://esm.sh/vite@^7.3.1",
-    "@vitejs/plugin-react": "https://esm.sh/@vitejs/plugin-react@^5.1.2",
-    "express": "https://esm.sh/express@^5.2.1",
-    "cors": "https://esm.sh/cors@^2.8.6",
-    "path": "https://esm.sh/path@^0.12.7",
-    "url": "https://esm.sh/url@^0.11.4"
-  }
-}
-</script>
-
 <!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Studios Stitch | Premium Essentials</title>
+    
     <!-- Favicon link using the logo -->
     <link rel="icon" type="image/png" href="logo.png">
+
+    <script type="importmap">
+    {
+      "imports": {
+        "react": "https://esm.sh/react@^19.2.4",
+        "react-dom/": "https://esm.sh/react-dom@^19.2.4/",
+        "react/": "https://esm.sh/react@^19.2.4/",
+        "@supabase/supabase-js": "https://esm.sh/@supabase/supabase-js@^2.93.3",
+        "@stripe/stripe-js": "https://esm.sh/@stripe/stripe-js@^8.7.0",
+        "react-router-dom": "https://esm.sh/react-router-dom@^7.13.0",
+        "@google/genai": "https://esm.sh/@google/genai@^1.38.0",
+        "vite": "https://esm.sh/vite@^7.3.1",
+        "@vitejs/plugin-react": "https://esm.sh/@vitejs/plugin-react@^5.1.2",
+        "express": "https://esm.sh/express@^5.2.1",
+        "cors": "https://esm.sh/cors@^2.8.6",
+        "path": "https://esm.sh/path@^0.12.7",
+        "url": "https://esm.sh/url@^0.11.4"
+      }
+    }
+    </script>
+
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&family=Bebas+Neue&display=swap" rel="stylesheet">
+    
     <style>
       :root {
         --fuchsia: #C0005A;
@@ -91,4 +94,62 @@
       }
 
       .stitch-line-v {
-        background-image: linear-gradient
+        background-image: linear-gradient(to bottom, #333 40%, rgba(255,255,255,0) 0%);
+        background-position: center;
+        background-size: 1px 8px;
+        background-repeat: repeat-y;
+        width: 1px;
+      }
+
+      .hover-stitch:hover .stitch-line-h, .hover-stitch:hover .stitch-line-v {
+        background-image: linear-gradient(to right, var(--fuchsia) 40%, rgba(255,255,255,0) 0%);
+      }
+
+      .bg-fuchsia-studio {
+        background-color: var(--fuchsia);
+      }
+      
+      .text-fuchsia-studio {
+        color: var(--fuchsia);
+      }
+
+      .logo-font {
+        font-family: 'Bebas Neue', sans-serif;
+      }
+
+      /* Wound stitch group */
+      .wound-stitch {
+        display: inline-flex;
+        gap: 2px;
+        font-family: monospace;
+        font-weight: 900;
+        color: var(--fuchsia);
+      }
+
+      /* Custom scrollbar */
+      ::-webkit-scrollbar {
+        width: 3px;
+      }
+      ::-webkit-scrollbar-track {
+        background: #000;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: var(--fuchsia);
+      }
+
+      .graffiti-bg {
+        background-image: radial-gradient(circle at 1px 1px, rgba(192, 0, 90, 0.05) 1px, transparent 0);
+        background-size: 32px 32px;
+      }
+
+      .logo-glow {
+        filter: drop-shadow(0 0 10px rgba(192, 0, 90, 0.3));
+      }
+    </style>
+  </head>
+  <body class="graffiti-bg">
+    <div id="root"></div>
+    <!-- Entry point for Vite application -->
+    <script type="module" src="/index.tsx"></script>
+  </body>
+</html>
