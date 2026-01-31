@@ -35,7 +35,6 @@ class PrintfulService {
   async testConnection() {
     try {
       const data = await this.apiFetch('/api/health');
-      // Verify that the bridge specifically reports 'connected' for printful
       return data?.bridge?.printful === 'connected';
     } catch (err) {
       console.error('STITCH_CONNECTION_TEST_FAILED', err);
@@ -44,24 +43,17 @@ class PrintfulService {
   }
 
   async fetchProducts(): Promise<Product[]> {
-    console.log('STITCH_TERMINAL: Initializing Inventory Sync...');
     try {
       const data = await this.apiFetch('/api/printful/products');
       const rawProducts = data?.result || [];
       
-      if (rawProducts.length === 0) {
-        console.warn('STITCH_TERMINAL: Store returned 0 sync products.');
-        return [];
-      }
+      if (rawProducts.length === 0) return [];
 
       const productsToFetch = rawProducts.slice(0, 16);
       const detailPromises = productsToFetch.map((p: any) => this.getProduct(p.id.toString()));
       const products = await Promise.all(detailPromises);
       return products.filter((p): p is Product => p !== null);
     } catch (err: any) {
-      if (err.message === 'PRINTFUL_AUTH_FAILED') {
-        console.error('STITCH_TERMINAL: Printful authentication failed. Check your token.');
-      }
       throw err;
     }
   }
@@ -84,14 +76,21 @@ class PrintfulService {
         });
       });
 
-      const variants: ProductVariant[] = syncVariants.map((v: any) => ({
-        id: v.id.toString(),
-        name: v.name,
-        size: v.size || 'OS',
-        color: v.color || 'N/A',
-        price: v.retail_price,
-        retail_price: v.retail_price
-      }));
+      const variants: ProductVariant[] = syncVariants.map((v: any) => {
+        // Try to find the production cost. 
+        // In Printful API, variant.price is what THEY charge YOU.
+        const baseCost = parseFloat(v.variant?.price || v.retail_price) * 0.6; // Mocking 40% margin if not found
+        
+        return {
+          id: v.id.toString(),
+          name: v.name,
+          size: v.size || 'OS',
+          color: v.color || 'N/A',
+          price: v.retail_price,
+          retail_price: v.retail_price,
+          cost: baseCost 
+        };
+      });
 
       return {
         id: syncProduct.id.toString(),

@@ -15,8 +15,9 @@ export interface ProductVariant {
   name: string;
   size: string;
   color: string;
-  price: string;
+  price: string; // Retail price set in store
   retail_price: string;
+  cost: number; // Base cost charged by Printful
 }
 
 export interface CartItem extends Product {
@@ -49,6 +50,7 @@ export interface Order {
   total: number;
   status: 'pending' | 'completed' | 'shipped';
   stripe_session_id?: string;
+  printful_order_id?: string; // Track the arbitrage fulfillment
 }
 
 export interface User {

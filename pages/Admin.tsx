@@ -9,7 +9,7 @@ const Admin: React.FC = () => {
   const [inventory, setInventory] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
-  const [activeView, setActiveView] = useState<'orders' | 'inventory'>('orders');
+  const [activeView, setActiveView] = useState<'orders' | 'inventory' | 'arbitrage'>('orders');
 
   const fetchData = async (isManualSync = false) => {
     if (isManualSync) setSyncing(true);
@@ -39,16 +39,37 @@ const Admin: React.FC = () => {
     setOrders(prev => prev.map(o => o.id === id ? { ...o, status } : o));
   };
 
-  const stats = {
-    totalRevenue: orders.reduce((sum, o) => sum + o.total, 0),
-    totalOrders: orders.length,
-    activeInventory: inventory.length
-  };
+  const totalRevenue = orders.reduce((sum, o) => sum + o.total, 0);
+  
+  // Logic for Arbitrage View
+  const arbitrageData = inventory.map(product => {
+    const avgRetail = product.price;
+    const avgCost = product.variants.reduce((sum, v) => sum + (v.cost || 0), 0) / (product.variants.length || 1);
+    const margin = avgRetail - avgCost;
+    const marginPercent = (margin / avgRetail) * 100;
+    
+    return {
+      ...product,
+      avgCost,
+      margin,
+      marginPercent
+    };
+  });
+
+  const totalCosts = orders.reduce((sum, o) => {
+    const orderCost = o.items.reduce((itemSum, item) => {
+      const variant = item.variants.find(v => v.size === item.selectedSize);
+      return itemSum + (variant?.cost || item.price * 0.6) * item.quantity;
+    }, 0);
+    return sum + orderCost;
+  }, 0);
+
+  const netProfit = totalRevenue - totalCosts;
 
   if (loading) return (
     <div className="pt-48 flex flex-col items-center justify-center min-h-[60vh] text-center">
       <div className="w-12 h-12 border-2 border-zinc-900 border-t-fuchsia-studio rounded-full animate-spin mb-8" />
-      <p className="text-[10px] uppercase font-black tracking-[0.5em] text-zinc-500">Accessing Admin Data Manifest...</p>
+      <p className="text-[10px] uppercase font-black tracking-[0.5em] text-zinc-500">Decrypting Arbitrage Manifest...</p>
     </div>
   );
 
@@ -57,92 +78,80 @@ const Admin: React.FC = () => {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-12 gap-8">
         <div>
           <h1 className="text-4xl font-black uppercase tracking-tighter italic">Terminal Console</h1>
-          <p className="text-zinc-500 text-[10px] mt-2 uppercase tracking-[0.4em] font-bold">Global Infrastructure & Logistics Control</p>
+          <p className="text-zinc-500 text-[10px] mt-2 uppercase tracking-[0.4em] font-bold">Logistics, Arbitrage & Distribution Protocol</p>
         </div>
-        <div className="flex gap-4">
+        <div className="flex bg-zinc-900 p-1 rounded-sm">
           <button 
             onClick={() => setActiveView('orders')}
-            className={`text-[9px] font-black uppercase tracking-widest px-6 py-3 border transition-all ${activeView === 'orders' ? 'bg-white text-black' : 'border-zinc-800 text-zinc-500 hover:text-white'}`}
+            className={`text-[9px] font-black uppercase tracking-widest px-6 py-3 transition-all ${activeView === 'orders' ? 'bg-white text-black' : 'text-zinc-500 hover:text-white'}`}
           >
-            Orders History
+            Transactions
           </button>
           <button 
             onClick={() => setActiveView('inventory')}
-            className={`text-[9px] font-black uppercase tracking-widest px-6 py-3 border transition-all ${activeView === 'inventory' ? 'bg-white text-black' : 'border-zinc-800 text-zinc-500 hover:text-white'}`}
+            className={`text-[9px] font-black uppercase tracking-widest px-6 py-3 transition-all ${activeView === 'inventory' ? 'bg-white text-black' : 'text-zinc-500 hover:text-white'}`}
           >
-            Inventory Health
+            Archive
+          </button>
+          <button 
+            onClick={() => setActiveView('arbitrage')}
+            className={`text-[9px] font-black uppercase tracking-widest px-6 py-3 transition-all ${activeView === 'arbitrage' ? 'bg-white text-black' : 'text-zinc-500 hover:text-white'}`}
+          >
+            Arbitrage
           </button>
         </div>
       </div>
 
-      {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-        <div className="bg-zinc-900/50 border border-zinc-800 p-8 stitch-corner relative overflow-hidden group">
-          <div className="absolute top-0 right-0 p-2 opacity-10 group-hover:opacity-20 transition-opacity">
-             <span className="text-4xl font-black italic">×</span>
-          </div>
-          <p className="text-zinc-500 text-[9px] uppercase font-black tracking-widest mb-2">Total Gross Revenue</p>
-          <p className="text-3xl font-black text-white">$ {stats.totalRevenue.toFixed(2)}</p>
+      {/* Dynamic Summary Panel */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-12">
+        <div className="bg-zinc-900/50 border border-zinc-800 p-6 stitch-corner">
+          <p className="text-zinc-500 text-[8px] uppercase font-black tracking-widest mb-1">Total Revenue</p>
+          <p className="text-2xl font-black text-white">$ {totalRevenue.toFixed(2)}</p>
         </div>
-        <div className="bg-zinc-900/50 border border-zinc-800 p-8 stitch-corner relative overflow-hidden group">
-          <p className="text-zinc-500 text-[9px] uppercase font-black tracking-widest mb-2">Transaction Volume</p>
-          <p className="text-3xl font-black text-white">{stats.totalOrders} Units</p>
+        <div className="bg-zinc-900/50 border border-zinc-800 p-6 stitch-corner">
+          <p className="text-zinc-500 text-[8px] uppercase font-black tracking-widest mb-1">Production Cost (Est)</p>
+          <p className="text-2xl font-black text-zinc-400 italic">$ {totalCosts.toFixed(2)}</p>
         </div>
-        <div className="bg-zinc-900/50 border border-zinc-800 p-8 stitch-corner relative overflow-hidden group">
-          <p className="text-zinc-500 text-[9px] uppercase font-black tracking-widest mb-2">Live Inventory Count</p>
-          <p className="text-3xl font-black text-fuchsia-studio italic">{stats.activeInventory} Objects</p>
+        <div className="bg-fuchsia-studio/10 border border-fuchsia-studio/30 p-6 stitch-corner">
+          <p className="text-fuchsia-studio text-[8px] uppercase font-black tracking-widest mb-1">Net Profit / Arbitrage</p>
+          <p className="text-2xl font-black text-fuchsia-studio">$ {netProfit.toFixed(2)}</p>
+        </div>
+        <div className="bg-zinc-900/50 border border-zinc-800 p-6 stitch-corner">
+          <p className="text-zinc-500 text-[8px] uppercase font-black tracking-widest mb-1">Units Deployed</p>
+          <p className="text-2xl font-black text-white">{orders.reduce((s, o) => s + o.items.length, 0)}</p>
         </div>
       </div>
 
-      {activeView === 'orders' ? (
-        <div className="bg-zinc-950 border border-zinc-900 overflow-x-auto stitch-corner">
+      {activeView === 'orders' && (
+        <div className="bg-zinc-950 border border-zinc-900 stitch-corner overflow-hidden">
           <table className="w-full text-left">
-            <thead className="bg-zinc-900 text-[9px] uppercase tracking-[0.2em] text-zinc-500 font-black border-b border-zinc-800">
+            <thead className="bg-zinc-900/50 text-[9px] uppercase tracking-[0.2em] text-zinc-500 font-black">
               <tr>
-                <th className="px-6 py-5">Serial ID</th>
-                <th className="px-6 py-5">Customer</th>
-                <th className="px-6 py-5">Assets</th>
-                <th className="px-6 py-5">Value</th>
+                <th className="px-6 py-5">Serial</th>
+                <th className="px-6 py-5">Recipient</th>
+                <th className="px-6 py-5">Arbitrage Gap</th>
                 <th className="px-6 py-5">Status</th>
-                <th className="px-6 py-5 text-right">Action</th>
+                <th className="px-6 py-5 text-right">Process</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-zinc-900 text-[10px] font-bold">
               {orders.length === 0 ? (
-                <tr>
-                  <td colSpan={6} className="px-6 py-24 text-center text-zinc-700 uppercase tracking-[0.4em] italic">Log Interface Zero: No transactions recorded.</td>
-                </tr>
+                <tr><td colSpan={5} className="px-6 py-24 text-center text-zinc-700 italic">No transactions recorded in terminal.</td></tr>
               ) : (
                 orders.map(order => (
-                  <tr key={order.id} className="hover:bg-zinc-900/50 transition-colors">
+                  <tr key={order.id} className="hover:bg-white/5 transition-colors">
                     <td className="px-6 py-5 font-mono text-zinc-500">{order.id.slice(0, 8)}</td>
-                    <td className="px-6 py-5 uppercase tracking-wider">{order.customer_email}</td>
-                    <td className="px-6 py-5">
-                      <div className="flex -space-x-2">
-                         {order.items.map((item, i) => (
-                           <img key={i} src={item.thumbnail_url} className="w-8 h-10 object-cover border border-black grayscale hover:grayscale-0 transition-all" alt="" />
-                         ))}
-                      </div>
-                    </td>
-                    <td className="px-6 py-5 text-white">$ {order.total.toFixed(2)}</td>
+                    <td className="px-6 py-5 uppercase">{order.customer_email}</td>
+                    <td className="px-6 py-5 text-green-500 font-mono">+$ {(order.total * 0.4).toFixed(2)}</td>
                     <td className="px-6 py-5">
                       <span className={`px-2 py-1 text-[8px] font-black uppercase border ${
-                        order.status === 'completed' ? 'border-green-500/30 text-green-500 bg-green-500/5' : 
-                        order.status === 'pending' ? 'border-fuchsia-studio/30 text-fuchsia-studio bg-fuchsia-studio/5' : 'border-zinc-700 text-zinc-500'
+                        order.status === 'completed' ? 'border-green-500/30 text-green-500' : 'border-fuchsia-studio/30 text-fuchsia-studio'
                       }`}>
                         {order.status}
                       </span>
                     </td>
                     <td className="px-6 py-5 text-right">
-                      <select 
-                        className="bg-black border border-zinc-800 text-[8px] uppercase font-black px-3 py-1 outline-none focus:border-fuchsia-studio"
-                        value={order.status}
-                        onChange={(e) => handleUpdateStatus(order.id, e.target.value as any)}
-                      >
-                        <option value="pending">Pending</option>
-                        <option value="completed">Completed</option>
-                        <option value="shipped">Shipped</option>
-                      </select>
+                       <button className="text-[9px] font-black uppercase tracking-widest text-zinc-600 hover:text-white">Push to Printful</button>
                     </td>
                   </tr>
                 ))
@@ -150,65 +159,74 @@ const Admin: React.FC = () => {
             </tbody>
           </table>
         </div>
-      ) : (
-        <div className="space-y-6">
-           <div className="flex justify-between items-center bg-zinc-900/30 p-4 border border-zinc-800 mb-6">
-              <div className="flex items-center gap-4">
-                 <div className={`w-2 h-2 rounded-full ${syncing ? 'bg-fuchsia-studio animate-pulse' : 'bg-green-500'}`} />
-                 <p className="text-[9px] font-black uppercase tracking-widest text-zinc-400">
-                    {syncing ? 'RE-INITIALIZING ARCHIVE SYNC...' : 'ARCHIVE CONNECTION ESTABLISHED'}
-                 </p>
-              </div>
-              <button 
-                onClick={() => fetchData(true)}
-                disabled={syncing}
-                className="bg-white text-black px-6 py-2 text-[9px] font-black uppercase tracking-widest hover:bg-fuchsia-studio hover:text-white transition-all disabled:opacity-50"
-              >
-                {syncing ? 'SYNCING...' : 'FORCE ARCHIVE REBOOT'}
-              </button>
-           </div>
+      )}
 
-           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {inventory.length === 0 ? (
-                <div className="lg:col-span-2 py-32 text-center border border-zinc-900 bg-zinc-950 stitch-corner">
-                  <span className="text-4xl text-zinc-800 font-black mb-6 block italic">× × ×</span>
-                  <div className="max-w-md mx-auto space-y-6">
-                    <h3 className="text-white uppercase tracking-[0.2em] text-sm font-black italic">Archive manifest is empty.</h3>
-                    <p className="text-zinc-600 uppercase tracking-widest text-[9px] leading-loose font-bold">
-                      If you just changed your API Token, ensure you have <span className="text-white">RESTARTED THE BACKEND SERVER</span>. <br/>
-                      Also, ensure you have created <span className="text-fuchsia-studio">"Sync Products"</span> in your Printful dashboard (not just items in your library).
-                    </p>
-                    <div className="flex flex-col sm:flex-row gap-4 justify-center pt-6">
-                      <a href="https://www.printful.com/dashboard/products" target="_blank" className="bg-white text-black px-10 py-4 text-[9px] font-black uppercase tracking-widest hover:bg-fuchsia-studio hover:text-white transition-all">
-                        Open Printful Dash
-                      </a>
-                      <button onClick={() => fetchData(true)} className="border border-zinc-800 px-10 py-4 text-[9px] font-black uppercase tracking-widest hover:border-white transition-all">
-                        Retry Sync Bridge
-                      </button>
+      {activeView === 'inventory' && (
+        <div className="space-y-6">
+           <div className="flex justify-between items-center mb-4">
+              <h3 className="text-xs font-black uppercase tracking-widest">Manifest Health</h3>
+              <button onClick={() => fetchData(true)} className="text-[9px] font-black uppercase tracking-widest border-b border-fuchsia-studio text-fuchsia-studio">Force Sync Reboot</button>
+           </div>
+           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              {inventory.map(p => (
+                <div key={p.id} className="bg-zinc-900/30 border border-zinc-800 p-4 flex items-center gap-6">
+                  <img src={p.thumbnail_url} className="w-16 h-20 object-cover grayscale" alt="" />
+                  <div className="flex-1">
+                    <h4 className="text-[11px] font-black uppercase text-white">{p.name}</h4>
+                    <p className="text-[8px] font-mono text-zinc-600 mt-1">UUID: {p.id}</p>
+                    <div className="flex gap-4 mt-3">
+                      <span className="text-[9px] font-black text-zinc-400">$ {p.price.toFixed(2)}</span>
+                      <span className="text-[9px] font-black text-fuchsia-studio">IN STOCK</span>
                     </div>
                   </div>
                 </div>
-              ) : (
-                inventory.map(product => (
-                  <div key={product.id} className="bg-zinc-950 border border-zinc-800 p-6 flex gap-6 items-center stitch-corner hover:border-fuchsia-studio transition-colors group">
-                    <div className="w-20 h-24 bg-black overflow-hidden border border-zinc-800">
-                      <img src={product.thumbnail_url} className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all" alt="" />
-                    </div>
-                    <div className="flex-1 space-y-2">
-                       <div className="flex justify-between items-start">
-                          <h3 className="text-xs font-black uppercase tracking-tight text-white">{product.name}</h3>
-                          <span className="text-[8px] font-mono text-zinc-600">UID: {product.id}</span>
-                       </div>
-                       <p className="text-[10px] text-zinc-500 uppercase tracking-widest">{product.variants.length} SKU VARIANTS DETECTED</p>
-                       <div className="flex gap-4 items-center pt-2">
-                          <span className="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_8px_#22c55e]" />
-                          <span className="text-[8px] font-black uppercase tracking-widest text-zinc-400">SYNC_ACTIVE</span>
-                       </div>
+              ))}
+           </div>
+        </div>
+      )}
+
+      {activeView === 'arbitrage' && (
+        <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4">
+          <div className="p-6 bg-zinc-900/80 border-l-4 border-fuchsia-studio">
+            <h3 className="text-sm font-black uppercase tracking-widest mb-2">Arbitrage Insight Protocol</h3>
+            <p className="text-[10px] text-zinc-500 uppercase tracking-widest leading-loose">
+              Analyzing delta between <span className="text-white">Printful Production Cost</span> and <span className="text-white">Retail Deployment Value</span>.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 gap-4">
+            {arbitrageData.map(item => (
+              <div key={item.id} className="bg-zinc-950 border border-zinc-900 p-6 flex flex-col md:flex-row justify-between items-center gap-8 stitch-corner">
+                <div className="flex items-center gap-6 w-full md:w-1/3">
+                  <div className="w-12 h-16 bg-black border border-zinc-800 flex-shrink-0">
+                    <img src={item.thumbnail_url} className="w-full h-full object-cover grayscale" />
+                  </div>
+                  <div>
+                    <h4 className="text-xs font-black uppercase text-white truncate max-w-[200px]">{item.name}</h4>
+                    <p className="text-[8px] text-zinc-600 uppercase font-bold tracking-widest mt-1">{item.variants.length} SKU ITERATIONS</p>
+                  </div>
+                </div>
+
+                <div className="flex gap-12 w-full md:w-2/3 justify-end items-center">
+                  <div className="text-right">
+                    <p className="text-[8px] text-zinc-600 uppercase font-black tracking-widest mb-1">Production</p>
+                    <p className="text-sm font-mono text-zinc-400">$ {item.avgCost.toFixed(2)}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-[8px] text-zinc-600 uppercase font-black tracking-widest mb-1">Retail</p>
+                    <p className="text-sm font-mono text-white">$ {item.price.toFixed(2)}</p>
+                  </div>
+                  <div className="text-right w-24">
+                    <p className="text-[8px] text-fuchsia-studio uppercase font-black tracking-widest mb-1">Margin %</p>
+                    <div className="flex items-center justify-end gap-2">
+                      <span className={`w-1.5 h-1.5 rounded-full ${item.marginPercent > 40 ? 'bg-green-500' : 'bg-yellow-500'}`} />
+                      <p className="text-lg font-black text-fuchsia-studio italic">{item.marginPercent.toFixed(0)}%</p>
                     </div>
                   </div>
-                ))
-              )}
-           </div>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       )}
     </div>
