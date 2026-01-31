@@ -1,5 +1,5 @@
 
-import { GoogleGenAI, Type, Modality } from "@google/genai";
+import { GoogleGenAI } from "@google/genai";
 
 class GeminiService {
   private getAI() {
@@ -9,7 +9,7 @@ class GeminiService {
   /**
    * Generates high-quality images using Gemini 3 Pro Image
    */
-  async generateImage(prompt: string, config: { aspectRatio: string, imageSize: string }) {
+  async generateImage(prompt: string, config: { aspectRatio: string, imageSize: string }): Promise<string> {
     const ai = this.getAI();
     const response = await ai.models.generateContent({
       model: 'gemini-3-pro-image-preview',
@@ -22,9 +22,12 @@ class GeminiService {
       },
     });
 
-    for (const part of response.candidates[0].content.parts) {
-      if (part.inlineData) {
-        return `data:${part.inlineData.mimeType};base64,${part.inlineData.data}`;
+    const candidate = response.candidates?.[0];
+    if (candidate?.content?.parts) {
+      for (const part of candidate.content.parts) {
+        if (part.inlineData) {
+          return `data:${part.inlineData.mimeType};base64,${part.inlineData.data}`;
+        }
       }
     }
     throw new Error("No image data returned from model");
@@ -33,7 +36,7 @@ class GeminiService {
   /**
    * Edits an image using Gemini 2.5 Flash Image (Nano Banana)
    */
-  async editImage(base64Image: string, prompt: string) {
+  async editImage(base64Image: string, prompt: string): Promise<string> {
     const ai = this.getAI();
     const mimeType = base64Image.split(';')[0].split(':')[1];
     const data = base64Image.split(',')[1];
@@ -48,9 +51,12 @@ class GeminiService {
       }
     });
 
-    for (const part of response.candidates[0].content.parts) {
-      if (part.inlineData) {
-        return `data:${part.inlineData.mimeType};base64,${part.inlineData.data}`;
+    const candidate = response.candidates?.[0];
+    if (candidate?.content?.parts) {
+      for (const part of candidate.content.parts) {
+        if (part.inlineData) {
+          return `data:${part.inlineData.mimeType};base64,${part.inlineData.data}`;
+        }
       }
     }
     throw new Error("No edited image data returned");
@@ -59,7 +65,7 @@ class GeminiService {
   /**
    * Analyzes an image using Gemini 3 Pro Preview
    */
-  async analyzeImage(base64Image: string, question: string = "Analyze this image for fashion style, materials, and construction details.") {
+  async analyzeImage(base64Image: string, question: string = "Analyze this image for fashion style, materials, and construction details."): Promise<string | undefined> {
     const ai = this.getAI();
     const mimeType = base64Image.split(';')[0].split(':')[1];
     const data = base64Image.split(',')[1];

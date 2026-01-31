@@ -1,5 +1,5 @@
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef } from 'react';
 import { geminiService } from '../services/geminiService';
 import ApiKeySelection from '../components/ApiKeySelection';
 
@@ -8,7 +8,7 @@ const StudioLab: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'generate' | 'edit' | 'analyze'>('generate');
   const [loading, setLoading] = useState(false);
   const [resultImage, setResultImage] = useState<string | null>(null);
-  const [analysis, setAnalysis] = useState<{ text: string, sources?: any[] } | null>(null);
+  const [analysis, setAnalysis] = useState<{ text: string | undefined, sources?: any[] } | null>(null);
   const [logs, setLogs] = useState<string[]>(["SYSTEM_IDLE: Awaiting input signal..."]);
   
   const addLog = (msg: string) => setLogs(prev => [...prev.slice(-4), `> ${msg}`]);
@@ -74,7 +74,7 @@ const StudioLab: React.FC = () => {
     addLog(`INIT_VISION: Running diagnostic scan...`);
     try {
       const text = await geminiService.analyzeImage(selectedFile);
-      setAnalysis({ text });
+      setAnalysis({ text: text || "Diagnostic scan returned no textual data." });
       addLog(`PROCESS_COMPLETE: Diagnostics available.`);
     } catch (err) {
       addLog(`ERROR: Scan interrupted.`);
@@ -88,7 +88,10 @@ const StudioLab: React.FC = () => {
     addLog(`INIT_SEARCH: Accessing global data nodes...`);
     try {
       const data = await geminiService.getTrends(genPrompt || "streetwear 2024");
-      setAnalysis(data);
+      setAnalysis({
+        text: data.text || "No trend data found.",
+        sources: data.sources
+      });
       addLog(`PROCESS_COMPLETE: Grounding sources found.`);
     } catch (err) {
       addLog(`ERROR: Data fetch failed.`);
