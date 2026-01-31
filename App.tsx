@@ -16,6 +16,7 @@ import Collections from './pages/Collections';
 import ProductDetail from './pages/ProductDetail';
 import Admin from './pages/Admin';
 import Setup from './pages/Setup';
+import Profile from './pages/Profile';
 
 const Footer: React.FC = () => (
   <footer className="bg-black border-t border-zinc-900 py-24 px-6 mt-24 relative overflow-hidden">
@@ -65,31 +66,35 @@ const Footer: React.FC = () => (
 
 const AuthPage: React.FC<{ onAuthSuccess: (user: User) => void }> = ({ onAuthSuccess }) => {
   const [email, setEmail] = useState('');
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
+    setLoading(true);
     try {
       if (configService.isConfigured()) {
         await supabaseService.signIn(email);
-        alert("Verification Link Sent to Email.");
+        alert("SECURITY_LINK_DISPATCHED: Check your inbox for identity verification.");
       } else {
-        const user = await supabaseService.devSignIn(email);
-        onAuthSuccess(user);
+        const user = await supabaseService.getCurrentUser() || { id: 'dev', email, role: 'user' };
+        onAuthSuccess(user as User);
         navigate('/');
       }
     } catch (err: any) {
       alert(err.message || "Auth Error");
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <div className="max-w-md mx-auto py-48 px-6 text-center">
       <div className="mb-12">
-        <span className="text-fuchsia-studio font-black text-2xl">×</span>
+        <span className="text-fuchsia-studio font-black text-2xl italic">× × ×</span>
       </div>
-      <h2 className="text-4xl font-black uppercase tracking-tighter mb-4 text-white italic">Identity Verification</h2>
-      <p className="text-zinc-600 text-[10px] uppercase tracking-[0.4em] mb-12">Authorized Personnel Only</p>
+      <h2 className="text-4xl font-black uppercase tracking-tighter mb-4 text-white italic">Security Clearance</h2>
+      <p className="text-zinc-600 text-[10px] uppercase tracking-[0.4em] mb-12">Authorized Personnel Only // Bridge Identity Verification</p>
       <form onSubmit={handleSignIn} className="space-y-4">
         <input 
           type="email" 
@@ -99,15 +104,13 @@ const AuthPage: React.FC<{ onAuthSuccess: (user: User) => void }> = ({ onAuthSuc
           value={email}
           onChange={e => setEmail(e.target.value)}
         />
-        <button className="w-full bg-white text-black py-5 font-black uppercase tracking-[0.4em] text-[10px] hover:bg-fuchsia-studio hover:text-white transition-all duration-300">
-          Access Archive
+        <button 
+          disabled={loading}
+          className="w-full bg-white text-black py-5 font-black uppercase tracking-[0.4em] text-[10px] hover:bg-fuchsia-studio hover:text-white transition-all duration-300 disabled:opacity-50"
+        >
+          {loading ? 'PROCESSING...' : 'REQUEST ACCESS'}
         </button>
       </form>
-      {!configService.isConfigured() && (
-        <p className="mt-8 text-[8px] text-zinc-700 uppercase tracking-widest leading-loose">
-          Terminal in Standalone Mode. <Link to="/setup" className="text-fuchsia-studio underline">Connect Backend</Link> to enable secure cloud auth.
-        </p>
-      )}
     </div>
   );
 };
@@ -127,10 +130,10 @@ const CheckoutSuccess: React.FC = () => (
   </div>
 );
 
-const ProductDetailWrapper: React.FC<{ onAddToCart: (p: Product, s: string) => void }> = ({ onAddToCart }) => {
+const ProductDetailWrapper: React.FC<{ onAddToCart: (p: Product, s: string) => void, currentUser: User | null }> = ({ onAddToCart, currentUser }) => {
   const { id } = useParams<{ id: string }>();
   if (!id) return <Navigate to="/shop" />;
-  return <ProductDetail productId={id} onAddToCart={onAddToCart} />;
+  return <ProductDetail productId={id} onAddToCart={onAddToCart} currentUser={currentUser} />;
 };
 
 const AppContent: React.FC = () => {
@@ -223,7 +226,8 @@ const AppContent: React.FC = () => {
           <Route path="/" element={<Home products={products} onAddToCart={handleAddToCart} />} />
           <Route path="/shop" element={<Shop products={products} onAddToCart={handleAddToCart} />} />
           <Route path="/collections" element={<Collections />} />
-          <Route path="/product/:id" element={<ProductDetailWrapper onAddToCart={handleAddToCart} />} />
+          <Route path="/product/:id" element={<ProductDetailWrapper onAddToCart={handleAddToCart} currentUser={user} />} />
+          <Route path="/profile" element={user ? <Profile user={user} /> : <Navigate to="/auth" />} />
           <Route path="/admin" element={user?.role === 'admin' ? <Admin /> : <Navigate to="/" />} />
           <Route path="/setup" element={<Setup />} />
           <Route path="/auth" element={<AuthPage onAuthSuccess={setUser} />} />

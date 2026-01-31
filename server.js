@@ -13,14 +13,13 @@ const app = express();
 const PORT = process.env.PORT || 3001;
 
 // --- CONFIGURATION ---
-// Clean the token of any accidental quotes or spaces from copy-paste
 const PRINTFUL_TOKEN = (process.env.PRINTFUL_TOKEN || '').trim().replace(/["']/g, '');
 const STRIPE_SECRET_KEY = (process.env.STRIPE_SECRET_KEY || '').trim();
 const STRIPE_WEBHOOK_SECRET = (process.env.STRIPE_WEBHOOK_SECRET || '').trim();
 
 const stripe = STRIPE_SECRET_KEY ? new Stripe(STRIPE_SECRET_KEY) : null;
 
-// --- WEBHOOK ENDPOINT (MUST BE BEFORE express.json()) ---
+// --- WEBHOOK ENDPOINT ---
 app.post('/api/stripe/webhook', express.raw({ type: 'application/json' }), async (req, res) => {
   if (!stripe || !STRIPE_WEBHOOK_SECRET) {
     console.error('[STRIPE] Webhook received but Stripe is not configured.');
@@ -53,7 +52,9 @@ app.post('/api/stripe/webhook', express.raw({ type: 'application/json' }), async
 app.use(cors());
 app.use(express.json());
 
+// Log incoming API requests for debugging
 app.use('/api', (req, res, next) => {
+  console.log(`[API_BRIDGE] ${req.method} ${req.url}`);
   res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
   res.setHeader('Pragma', 'no-cache');
   res.setHeader('Expires', '0');
@@ -80,9 +81,8 @@ async function fetchFromPrintful(endpoint, method = 'GET', body = null) {
 
   const response = await fetch(url, options);
   
-  // Handle 401 specifically for the user
   if (response.status === 401) {
-    console.error('[PRINTFUL] ERROR: 401 Unauthorized. Your token is likely invalid.');
+    console.error('[PRINTFUL] ERROR: 401 Unauthorized.');
     throw new Error('PRINTFUL_AUTH_FAILED');
   }
 
@@ -118,7 +118,6 @@ app.get('/api/health', async (req, res) => {
   let printfulStatus = 'unknown';
   try {
     if (PRINTFUL_TOKEN) {
-      // Try a tiny request to verify the token is actually valid
       await fetchFromPrintful('/store-statistics');
       printfulStatus = 'connected';
     } else {
@@ -194,10 +193,14 @@ app.post('/api/checkout/create-session', async (req, res) => {
   }
 });
 
+// CRITICAL: Catch-all for API routes to ensure they ALWAYS return JSON, never HTML
 app.all('/api/*', (req, res) => {
-  res.status(404).json({ error: `Route ${req.method} ${req.url} not found.` });
+  res.status(404).json({ 
+    error: `STITCH_ROUTING_ERROR: Route ${req.method} ${req.url} not found on backend.` 
+  });
 });
 
+// --- STATIC FILES (SPA Fallback) ---
 const distPath = path.resolve(__dirname, 'dist');
 app.use(express.static(distPath));
 

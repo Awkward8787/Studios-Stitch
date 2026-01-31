@@ -38,6 +38,12 @@ const Navbar: React.FC<NavbarProps> = ({ cartCount, onCartToggle, userEmail, onL
                 Series
                 {location.pathname === '/collections' && <div className="absolute -bottom-1 left-0 w-full h-[1px] bg-fuchsia-studio" />}
               </Link>
+              {userEmail && (
+                <Link to="/profile" className={`hover:text-white transition-all relative ${location.pathname === '/profile' ? 'text-white' : ''}`}>
+                  Manifest
+                  {location.pathname === '/profile' && <div className="absolute -bottom-1 left-0 w-full h-[1px] bg-fuchsia-studio" />}
+                </Link>
+              )}
             </nav>
           </div>
           
@@ -49,9 +55,14 @@ const Navbar: React.FC<NavbarProps> = ({ cartCount, onCartToggle, userEmail, onL
 
             <div className="flex items-center gap-6">
               {userEmail ? (
-                <button onClick={onLogout} className="text-[9px] font-black uppercase tracking-widest text-zinc-500 hover:text-fuchsia-studio transition-colors">
-                  Disconnect
-                </button>
+                <div className="flex items-center gap-4">
+                  <Link to="/profile" className="text-[9px] font-black uppercase tracking-widest text-white border-b border-fuchsia-studio">
+                    {userEmail.split('@')[0]}
+                  </Link>
+                  <button onClick={onLogout} className="text-[9px] font-black uppercase tracking-widest text-zinc-500 hover:text-fuchsia-studio transition-colors">
+                    Logoff
+                  </button>
+                </div>
               ) : (
                 <Link to="/auth" className="text-[9px] font-black uppercase tracking-widest text-zinc-500 hover:text-white transition-colors">
                   Authenticate

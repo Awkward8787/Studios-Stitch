@@ -25,6 +25,8 @@ const Shop: React.FC<ShopProps> = ({ products: initialProducts, onAddToCart }) =
         } catch (err: any) {
           if (err.message === 'PRINTFUL_AUTH_FAILED') {
             setError('AUTH_FAILURE');
+          } else if (err.message.includes('SERVER_MISCONFIG')) {
+            setError('BRIDGE_FAILURE');
           } else {
             setError('SYNC_FAILURE');
           }
@@ -92,6 +94,15 @@ const Shop: React.FC<ShopProps> = ({ products: initialProducts, onAddToCart }) =
               3. Restart your Node.js terminal to apply changes.
             </p>
           </div>
+        </div>
+      ) : error === 'BRIDGE_FAILURE' ? (
+        <div className="py-32 text-center border border-yellow-500/30 bg-yellow-500/5">
+          <div className="mb-6 text-yellow-500 text-4xl font-black italic">BRIDGE_OFFLINE</div>
+          <h2 className="text-white uppercase tracking-[0.2em] text-sm font-black">Backend API Unreachable</h2>
+          <p className="text-zinc-500 uppercase tracking-widest text-[10px] mt-4 max-w-md mx-auto">
+            The frontend is receiving HTML instead of data. This usually happens if the backend server (port 3001) is not running.<br/><br/>
+            Run <span className="text-white font-mono bg-zinc-800 px-2">npm start</span> in your terminal.
+          </p>
         </div>
       ) : products.length === 0 ? (
         <div className="py-32 text-center border border-zinc-900 bg-zinc-900/20">

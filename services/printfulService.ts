@@ -4,7 +4,8 @@ import { Product, ProductVariant } from '../types';
 class PrintfulService {
   private async apiFetch(endpoint: string) {
     try {
-      const url = endpoint.startsWith('http') ? endpoint : `${window.location.origin}${endpoint}`;
+      // Use relative path for better proxy compatibility
+      const url = endpoint;
       
       const response = await fetch(url, {
         method: 'GET',
@@ -17,13 +18,14 @@ class PrintfulService {
 
       const contentType = response.headers.get('content-type');
       
+      // If we get HTML instead of JSON, it means the request hit a route that fell back to index.html (SPA routing)
       if (contentType && contentType.includes('text/html')) {
-        throw new Error("SERVER_MISCONFIG: Received HTML instead of JSON. Check backend routing.");
+        console.error(`STITCH_TERMINAL: Route ${endpoint} returned HTML. This usually means the backend server is not running on port 3001 or the proxy failed.`);
+        throw new Error("SERVER_MISCONFIG: Received HTML instead of JSON. Ensure 'npm start' is running in a separate terminal.");
       }
 
       const data = await response.json();
       if (!response.ok) {
-        // Pass through specific auth errors
         if (response.status === 401) throw new Error('PRINTFUL_AUTH_FAILED');
         throw new Error(data.error || `Server Error ${response.status}`);
       }

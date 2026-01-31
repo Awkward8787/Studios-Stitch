@@ -24,6 +24,23 @@ export interface CartItem extends Product {
   quantity: number;
 }
 
+export interface Review {
+  id: string;
+  product_id: string;
+  user_id: string;
+  user_email: string;
+  rating: number;
+  comment: string;
+  created_at: string;
+}
+
+export interface WishlistItem {
+  id: string;
+  user_id: string;
+  product_id: string;
+  created_at: string;
+}
+
 export interface Order {
   id: string;
   created_at: string;
