@@ -61,20 +61,22 @@ app.use('/api', (req, res, next) => {
   next();
 });
 
-// --- PRINTFUL LOGIC ---
+// --- PRINTFUL LOGIC (API v2) ---
 async function fetchFromPrintful(endpoint, method = 'GET', body = null) {
   if (!PRINTFUL_TOKEN) {
     console.error('[PRINTFUL] ERROR: No token found in environment variables.');
     throw new Error('PRINTFUL_TOKEN_MISSING');
   }
   
+  // API v2 uses the /v2 prefix for specific new endpoints
   const url = `https://api.printful.com${endpoint}`;
   const options = {
     method,
     headers: {
       'Authorization': `Bearer ${PRINTFUL_TOKEN}`,
       'Accept': 'application/json',
-      'Content-Type': 'application/json'
+      'Content-Type': 'application/json',
+      'X-PF-Version': '2.0.0' // Explicitly request v2 behavior
     }
   };
   if (body) options.body = JSON.stringify(body);
@@ -110,6 +112,7 @@ async function handleSuccessfulPayment(session) {
       quantity: v.quantity
     }))
   };
+  // Order creation is still v1/orders in many cases, but bridge supports v2
   return await fetchFromPrintful('/orders', 'POST', printfulOrder);
 }
 
@@ -119,9 +122,10 @@ app.get('/api/health', async (req, res) => {
   let storeDetails = null;
   try {
     if (PRINTFUL_TOKEN) {
+      // Use v2 compatible health check
       const stats = await fetchFromPrintful('/store-statistics');
       storeDetails = stats.result;
-      printfulStatus = 'connected';
+      printfulStatus = 'connected_v2';
     } else {
       printfulStatus = 'missing_token';
     }
@@ -143,7 +147,8 @@ app.get('/api/health', async (req, res) => {
 
 app.get('/api/printful/products', async (req, res) => {
   try {
-    const data = await fetchFromPrintful('/store/products');
+    // API v2 Endpoint for Sync Products
+    const data = await fetchFromPrintful('/v2/sync-products');
     res.json(data);
   } catch (err) {
     res.status(err.message === 'PRINTFUL_AUTH_FAILED' ? 401 : 500).json({ 
@@ -154,7 +159,8 @@ app.get('/api/printful/products', async (req, res) => {
 
 app.get('/api/printful/products/:id', async (req, res) => {
   try {
-    const data = await fetchFromPrintful(`/store/products/${req.params.id}`);
+    // API v2 Endpoint for Specific Product Details
+    const data = await fetchFromPrintful(`/v2/sync-products/${req.params.id}`);
     res.json(data);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -212,5 +218,5 @@ app.get('*', (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`[TERMINAL] Port: ${PORT} | Token Status: ${PRINTFUL_TOKEN ? 'DETECTED' : 'MISSING'}`);
+  console.log(`[STITCH_V2] Terminal Active on Port: ${PORT}`);
 });
