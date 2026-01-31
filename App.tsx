@@ -17,6 +17,7 @@ import ProductDetail from './pages/ProductDetail';
 import Admin from './pages/Admin';
 import Setup from './pages/Setup';
 import Profile from './pages/Profile';
+import OpeningSequence from './components/OpeningSequence';
 
 const Footer: React.FC = () => (
   <footer className="bg-black border-t border-zinc-900 py-24 px-6 mt-24 relative overflow-hidden">
@@ -142,6 +143,7 @@ const AppContent: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [showIntro, setShowIntro] = useState(true);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -203,8 +205,12 @@ const AppContent: React.FC = () => {
     navigate('/');
   };
 
+  if (showIntro) {
+    return <OpeningSequence onComplete={() => setShowIntro(false)} />;
+  }
+
   return (
-    <div className="min-h-screen bg-black text-white font-sans selection:bg-fuchsia-studio selection:text-white">
+    <div className="min-h-screen bg-black text-white font-sans selection:bg-fuchsia-studio selection:text-white animate-in fade-in duration-1000">
       <Navbar 
         cartCount={cart.reduce((sum, item) => sum + item.quantity, 0)}
         onCartToggle={() => setIsCartOpen(!isCartOpen)}

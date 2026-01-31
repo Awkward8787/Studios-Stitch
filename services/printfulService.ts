@@ -4,10 +4,7 @@ import { Product, ProductVariant } from '../types';
 class PrintfulService {
   private async apiFetch(endpoint: string) {
     try {
-      // Use relative path for better proxy compatibility
-      const url = endpoint;
-      
-      const response = await fetch(url, {
+      const response = await fetch(endpoint, {
         method: 'GET',
         headers: {
           'Accept': 'application/json',
@@ -18,10 +15,9 @@ class PrintfulService {
 
       const contentType = response.headers.get('content-type');
       
-      // If we get HTML instead of JSON, it means the request hit a route that fell back to index.html (SPA routing)
       if (contentType && contentType.includes('text/html')) {
-        console.error(`STITCH_TERMINAL: Route ${endpoint} returned HTML. This usually means the backend server is not running on port 3001 or the proxy failed.`);
-        throw new Error("SERVER_MISCONFIG: Received HTML instead of JSON. Ensure 'npm start' is running in a separate terminal.");
+        console.error(`STITCH_TERMINAL: Route ${endpoint} returned HTML. This usually means the backend bridge is offline.`);
+        throw new Error("SERVER_OFFLINE: Received HTML instead of JSON.");
       }
 
       const data = await response.json();
@@ -39,8 +35,10 @@ class PrintfulService {
   async testConnection() {
     try {
       const data = await this.apiFetch('/api/health');
-      return data.bridge?.printful === 'connected';
-    } catch {
+      // Verify that the bridge specifically reports 'connected' for printful
+      return data?.bridge?.printful === 'connected';
+    } catch (err) {
+      console.error('STITCH_CONNECTION_TEST_FAILED', err);
       return false;
     }
   }

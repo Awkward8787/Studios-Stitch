@@ -1,6 +1,7 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { printfulService } from '../services/printfulService';
 
 interface NavbarProps {
   cartCount: number;
@@ -11,6 +12,15 @@ interface NavbarProps {
 
 const Navbar: React.FC<NavbarProps> = ({ cartCount, onCartToggle, userEmail, onLogout }) => {
   const location = useLocation();
+  const [isLive, setIsLive] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    const checkHealth = async () => {
+      const ok = await printfulService.testConnection();
+      setIsLive(ok);
+    };
+    checkHealth();
+  }, [location.pathname]);
 
   return (
     <header className="sticky top-0 z-50">
@@ -50,7 +60,9 @@ const Navbar: React.FC<NavbarProps> = ({ cartCount, onCartToggle, userEmail, onL
           <div className="flex items-center gap-8">
             <div className="hidden lg:flex items-center gap-2">
               <span className="wound-stitch">× × ×</span>
-              <span className="text-[8px] font-black text-zinc-700 tracking-[0.4em] uppercase">Status: Live</span>
+              <span className={`text-[8px] font-black tracking-[0.4em] uppercase transition-colors ${isLive === true ? 'text-fuchsia-studio' : isLive === false ? 'text-red-600' : 'text-zinc-700'}`}>
+                Status: {isLive === true ? 'Live' : isLive === false ? 'Offline' : 'Syncing'}
+              </span>
             </div>
 
             <div className="flex items-center gap-6">

@@ -1,20 +1,26 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { configService, AppConfig } from '../services/configService';
 import { supabaseService } from '../services/supabaseService';
 import { stripeService } from '../services/stripeService';
+import { printfulService } from '../services/printfulService';
 
 const Setup: React.FC = () => {
   const [config, setConfig] = useState<AppConfig>(configService.getConfig());
   const [activeTab, setActiveTab] = useState<'creds' | 'sql'>('creds');
-  const [status, setStatus] = useState<{ supabase: boolean | null, stripe: boolean | null }>({
+  const [status, setStatus] = useState<{ 
+    supabase: boolean | null, 
+    stripe: boolean | null,
+    printful: boolean | null 
+  }>({
     supabase: null,
-    stripe: null
+    stripe: null,
+    printful: null
   });
 
   const handleSave = () => {
     configService.updateConfig(config);
-    alert("SYSTEM REBOOT: Credentials Saved.");
+    alert("SYSTEM REBOOT: Credentials Saved. Local archive updated.");
   };
 
   const testSupabase = async () => {
@@ -25,6 +31,11 @@ const Setup: React.FC = () => {
   const testStripe = async () => {
     const ok = await stripeService.testConnection();
     setStatus(prev => ({ ...prev, stripe: ok }));
+  };
+
+  const testPrintful = async () => {
+    const ok = await printfulService.testConnection();
+    setStatus(prev => ({ ...prev, printful: ok }));
   };
 
   const masterSql = `-- STUDIOS STITCH: MASTER INFRASTRUCTURE SCHEMA
@@ -90,7 +101,7 @@ create trigger on_auth_user_created
   for each row execute procedure public.handle_new_user();`;
 
   return (
-    <div className="max-w-4xl mx-auto px-6 py-32">
+    <div className="max-w-7xl mx-auto px-6 py-32">
       <div className="mb-16 border-l-4 border-fuchsia-studio pl-8 flex justify-between items-end">
         <div>
           <h1 className="text-6xl font-black uppercase tracking-tighter italic">Terminal Config</h1>
@@ -115,12 +126,12 @@ create trigger on_auth_user_created
       </div>
 
       {activeTab === 'creds' ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-12 animate-in fade-in duration-500">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 animate-in fade-in duration-500">
           {/* Supabase Block */}
           <div className="space-y-8 bg-zinc-900/50 p-8 border border-zinc-800 stitch-corner relative">
             <div className="flex justify-between items-center">
               <h3 className="text-xs font-black uppercase tracking-widest text-white">Supabase Cloud</h3>
-              <div className={`w-2 h-2 rounded-full ${status.supabase === true ? 'bg-fuchsia-studio shadow-[0_0_10px_#C0005A]' : 'bg-zinc-800'}`} />
+              <div className={`w-2 h-2 rounded-full ${status.supabase === true ? 'bg-fuchsia-studio shadow-[0_0_10px_#C0005A]' : status.supabase === false ? 'bg-red-600' : 'bg-zinc-800'}`} />
             </div>
             
             <div className="space-y-4">
@@ -156,7 +167,7 @@ create trigger on_auth_user_created
           <div className="space-y-8 bg-zinc-900/50 p-8 border border-zinc-800 stitch-corner relative">
             <div className="flex justify-between items-center">
               <h3 className="text-xs font-black uppercase tracking-widest text-white">Stripe Payments</h3>
-              <div className={`w-2 h-2 rounded-full ${status.stripe === true ? 'bg-fuchsia-studio shadow-[0_0_10px_#C0005A]' : 'bg-zinc-800'}`} />
+              <div className={`w-2 h-2 rounded-full ${status.stripe === true ? 'bg-fuchsia-studio shadow-[0_0_10px_#C0005A]' : status.stripe === false ? 'bg-red-600' : 'bg-zinc-800'}`} />
             </div>
             
             <div className="space-y-4">
@@ -171,17 +182,43 @@ create trigger on_auth_user_created
               </div>
             </div>
             
-            <div className="p-4 bg-black/50 border border-zinc-800/50">
-               <p className="text-[8px] text-zinc-600 leading-relaxed uppercase tracking-widest font-bold">
-                 Note: Checkout integration requires a valid backend endpoint. This portal verifies the Public Key handshake only.
-               </p>
-            </div>
-
             <button 
               onClick={testStripe}
               className="w-full py-3 border border-zinc-700 text-[9px] font-black uppercase tracking-widest hover:bg-white hover:text-black transition-all"
             >
               Verify Protocol
+            </button>
+          </div>
+
+          {/* Printful Block */}
+          <div className="space-y-8 bg-zinc-900/50 p-8 border border-zinc-800 stitch-corner relative">
+            <div className="flex justify-between items-center">
+              <h3 className="text-xs font-black uppercase tracking-widest text-white">Printful Inventory</h3>
+              <div className={`w-2 h-2 rounded-full ${status.printful === true ? 'bg-fuchsia-studio shadow-[0_0_10px_#C0005A]' : status.printful === false ? 'bg-red-600' : 'bg-zinc-800'}`} />
+            </div>
+            
+            <div className="space-y-4">
+               <div className="p-4 bg-black/50 border border-zinc-800/50">
+                  <p className="text-[9px] text-zinc-500 leading-relaxed uppercase tracking-widest font-bold">
+                    The Printful Bridge requires a <span className="text-white">Personal Access Token</span> configured in your backend <span className="text-fuchsia-studio font-mono">.env</span> file.
+                  </p>
+               </div>
+               <div className="space-y-2">
+                <label className="text-[9px] font-black text-zinc-600 uppercase tracking-widest">Token ID (UI Preview)</label>
+                <input 
+                  type="password"
+                  disabled
+                  className="w-full bg-zinc-950 border border-zinc-900 p-4 text-[10px] font-mono text-zinc-700 cursor-not-allowed"
+                  value={config.printfulApiKey}
+                />
+              </div>
+            </div>
+
+            <button 
+              onClick={testPrintful}
+              className="w-full py-3 border border-zinc-700 text-[9px] font-black uppercase tracking-widest hover:bg-white hover:text-black transition-all"
+            >
+              Sync Diagnostics
             </button>
           </div>
         </div>
@@ -203,21 +240,21 @@ create trigger on_auth_user_created
             <pre className="bg-black p-6 text-[10px] font-mono text-zinc-500 overflow-x-auto border border-zinc-900 max-h-[50vh]">
               {masterSql}
             </pre>
-            <p className="mt-6 text-[9px] text-zinc-500 uppercase tracking-widest font-bold leading-relaxed italic">
-              * Action Required: Paste this into your Supabase SQL Editor and run it to initialize your database tables and security policies.
-            </p>
           </div>
         </div>
       )}
 
       {activeTab === 'creds' && (
-        <div className="mt-12 flex justify-center">
+        <div className="mt-12 flex flex-col items-center gap-6">
           <button 
             onClick={handleSave}
             className="bg-fuchsia-studio text-white px-24 py-6 font-black uppercase tracking-[0.5em] text-xs hover:bg-white hover:text-black transition-all shadow-2xl"
           >
-            Execute Sync
+            Update Local Manifest
           </button>
+          <p className="text-[8px] text-zinc-700 uppercase tracking-[0.4em] font-bold">
+            Warning: Some changes require a full terminal reboot (npm start)
+          </p>
         </div>
       )}
     </div>
