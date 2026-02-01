@@ -41,6 +41,7 @@ const Setup: React.FC = () => {
   const masterSql = `-- STUDIOS STITCH: MASTER INFRASTRUCTURE SCHEMA
 -- Execute this in the Supabase SQL Editor
 
+-- 1. PROFILES
 create table public.profiles (
   id uuid references auth.users on delete cascade primary key,
   email text,
@@ -48,6 +49,7 @@ create table public.profiles (
   updated_at timestamp with time zone default timezone('utc'::text, now())
 );
 
+-- 2. REVIEWS
 create table public.reviews (
   id uuid default gen_random_uuid() primary key,
   product_id text not null,
@@ -58,6 +60,7 @@ create table public.reviews (
   created_at timestamp with time zone default timezone('utc'::text, now())
 );
 
+-- 3. WISHLIST
 create table public.wishlist (
   id uuid default gen_random_uuid() primary key,
   user_id uuid references auth.users on delete cascade not null,
@@ -66,6 +69,7 @@ create table public.wishlist (
   unique(user_id, product_id)
 );
 
+-- 4. ORDERS
 create table public.orders (
   id uuid default gen_random_uuid() primary key,
   user_id uuid references auth.users on delete set null,
@@ -77,15 +81,30 @@ create table public.orders (
   created_at timestamp with time zone default timezone('utc'::text, now())
 );
 
+-- 5. COMMUNITY ASSETS
+create table public.community_assets (
+  id uuid default gen_random_uuid() primary key,
+  user_id uuid references auth.users on delete set null,
+  title text not null,
+  image_url text not null,
+  artist_name text not null,
+  description text,
+  status text not null default 'pending' check (status in ('pending', 'approved')),
+  created_at timestamp with time zone default timezone('utc'::text, now())
+);
+
 alter table public.profiles enable row level security;
 alter table public.reviews enable row level security;
 alter table public.wishlist enable row level security;
 alter table public.orders enable row level security;
+alter table public.community_assets enable row level security;
 
 create policy "Profiles: Private View" on public.profiles for select using (auth.uid() = id);
 create policy "Reviews: Public Sync" on public.reviews for select using (true);
 create policy "Wishlist: Private Access" on public.wishlist for all using (auth.uid() = user_id);
 create policy "Orders: Private View" on public.orders for select using (auth.uid() = user_id);
+create policy "Assets: Public Sync" on public.community_assets for select using (true);
+create policy "Assets: Auth Insert" on public.community_assets for insert with check (auth.role() = 'authenticated');
 
 create or replace function public.handle_new_user()
 returns trigger as $$

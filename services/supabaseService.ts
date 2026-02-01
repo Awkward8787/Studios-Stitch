@@ -1,6 +1,6 @@
 
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
-import { User, Order, Review, WishlistItem } from '../types';
+import { User, Order, Review, WishlistItem, CommunityAsset } from '../types';
 import { configService } from './configService';
 
 class SupabaseService {
@@ -20,7 +20,6 @@ class SupabaseService {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return null;
       
-      // Fetch profile for role
       const { data: profile } = await supabase
         .from('profiles')
         .select('role')
@@ -49,6 +48,36 @@ class SupabaseService {
   async signOut() {
     if (!this.client) return;
     await this.client.auth.signOut();
+  }
+
+  // --- ASSETS ---
+  async getAssets(onlyApproved = true): Promise<CommunityAsset[]> {
+    try {
+      const supabase = this.getClient();
+      let query = supabase.from('community_assets').select('*').order('created_at', { ascending: false });
+      if (onlyApproved) query = query.eq('status', 'approved');
+      const { data, error } = await query;
+      if (error) throw error;
+      return data as CommunityAsset[];
+    } catch {
+      return [];
+    }
+  }
+
+  async addAsset(asset: Omit<CommunityAsset, 'id' | 'created_at' | 'status'>): Promise<CommunityAsset> {
+    const supabase = this.getClient();
+    const { data, error } = await supabase
+      .from('community_assets')
+      .insert([{ ...asset, status: 'approved' }]) // Defaulting to approved for now
+      .select()
+      .single();
+    if (error) throw error;
+    return data as CommunityAsset;
+  }
+
+  async deleteAsset(id: string) {
+    const supabase = this.getClient();
+    await supabase.from('community_assets').delete().eq('id', id);
   }
 
   // --- REVIEWS ---

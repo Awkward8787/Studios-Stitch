@@ -83,8 +83,8 @@ const Home: React.FC<HomeProps> = ({ products, onAddToCart }) => {
               Studios Stitch is more than a brand. It's a platform for subversive artists and underground designers. Submit your art and join the archive.
             </p>
             <div className="flex gap-6">
-              <button className="bg-white text-black px-12 py-5 font-black uppercase tracking-widest text-[10px] hover:bg-fuchsia-studio hover:text-white transition-all">Submit Your Art</button>
-              <button className="border border-zinc-800 text-white px-12 py-5 font-black uppercase tracking-widest text-[10px] hover:border-white transition-all">Learn More</button>
+              <Link to="/gallery" className="bg-white text-black px-12 py-5 font-black uppercase tracking-widest text-[10px] hover:bg-fuchsia-studio hover:text-white transition-all">Submit Your Art</Link>
+              <Link to="/gallery" className="border border-zinc-800 text-white px-12 py-5 font-black uppercase tracking-widest text-[10px] hover:border-white transition-all">View Archive</Link>
             </div>
           </div>
           <div className="grid grid-cols-3 gap-4 rotate-3 opacity-20">

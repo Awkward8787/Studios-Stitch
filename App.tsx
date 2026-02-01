@@ -17,6 +17,7 @@ import ProductDetail from './pages/ProductDetail';
 import Admin from './pages/Admin';
 import Setup from './pages/Setup';
 import Profile from './pages/Profile';
+import Gallery from './pages/Gallery';
 import OpeningSequence from './components/OpeningSequence';
 
 const Footer: React.FC = () => (
@@ -27,7 +28,7 @@ const Footer: React.FC = () => (
     
     <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-16 relative z-10">
       <div className="col-span-1 md:col-span-2 space-y-6">
-        <Link to="/" className="inline-block h-8">
+        <Link to="/" className="inline-block h-8 h-8">
            <img src="logo.png" className="h-full w-auto grayscale invert" alt="Studios Stitch" />
         </Link>
         <p className="text-zinc-500 text-[10px] tracking-[0.3em] max-w-sm uppercase leading-loose">
@@ -41,8 +42,8 @@ const Footer: React.FC = () => (
         <h4 className="text-[10px] uppercase tracking-[0.4em] font-black text-white">Archive</h4>
         <ul className="text-[10px] space-y-4 uppercase tracking-[0.3em] text-zinc-500 font-bold">
           <li><Link to="/shop" className="hover:text-fuchsia-studio transition-colors">All Objects</Link></li>
+          <li><Link to="/gallery" className="hover:text-fuchsia-studio transition-colors">Asset Gallery</Link></li>
           <li><Link to="/collections" className="hover:text-fuchsia-studio transition-colors">Series 01</Link></li>
-          <li><Link to="/shop" className="hover:text-fuchsia-studio transition-colors">New Deployment</Link></li>
         </ul>
       </div>
       <div className="space-y-6">
@@ -231,6 +232,7 @@ const AppContent: React.FC = () => {
         <Routes>
           <Route path="/" element={<Home products={products} onAddToCart={handleAddToCart} />} />
           <Route path="/shop" element={<Shop products={products} onAddToCart={handleAddToCart} />} />
+          <Route path="/gallery" element={<Gallery currentUser={user} />} />
           <Route path="/collections" element={<Collections />} />
           <Route path="/product/:id" element={<ProductDetailWrapper onAddToCart={handleAddToCart} currentUser={user} />} />
           <Route path="/profile" element={user ? <Profile user={user} /> : <Navigate to="/auth" />} />

@@ -15,14 +15,25 @@ export interface ProductVariant {
   name: string;
   size: string;
   color: string;
-  price: string; // Retail price set in store
+  price: string;
   retail_price: string;
-  cost: number; // Base cost charged by Printful
+  cost: number;
 }
 
 export interface CartItem extends Product {
   selectedSize: string;
   quantity: number;
+}
+
+export interface CommunityAsset {
+  id: string;
+  title: string;
+  image_url: string;
+  artist_name: string;
+  description?: string;
+  created_at: string;
+  status: 'pending' | 'approved';
+  user_id?: string;
 }
 
 export interface Review {
@@ -50,7 +61,7 @@ export interface Order {
   total: number;
   status: 'pending' | 'completed' | 'shipped';
   stripe_session_id?: string;
-  printful_order_id?: string; // Track the arbitrage fulfillment
+  printful_order_id?: string;
 }
 
 export interface User {

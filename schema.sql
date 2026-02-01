@@ -1,9 +1,8 @@
 
 -- STUDIOS STITCH: MASTER INFRASTRUCTURE SCHEMA
--- Execute this in the Supabase SQL Editor (https://supabase.com/dashboard/project/_/sql)
+-- This script sets up the entire database architecture for the platform.
 
--- 1. PROFILES (Identity Manifest)
--- Extends the base auth.users table with custom metadata
+-- 1. PROFILES (Extends Supabase Auth)
 create table public.profiles (
   id uuid references auth.users on delete cascade primary key,
   email text,
@@ -11,8 +10,7 @@ create table public.profiles (
   updated_at timestamp with time zone default timezone('utc'::text, now())
 );
 
--- 2. REVIEWS (Diagnostic Logs)
--- Stores field reports/comments left by users on specific products
+-- 2. REVIEWS (User product feedback)
 create table public.reviews (
   id uuid default gen_random_uuid() primary key,
   product_id text not null,
@@ -23,8 +21,7 @@ create table public.reviews (
   created_at timestamp with time zone default timezone('utc'::text, now())
 );
 
--- 3. WISHLIST (Reserved Manifest)
--- Priority assets saved by users to their private collection
+-- 3. WISHLIST (User-prioritized objects)
 create table public.wishlist (
   id uuid default gen_random_uuid() primary key,
   user_id uuid references auth.users on delete cascade not null,
@@ -33,46 +30,61 @@ create table public.wishlist (
   unique(user_id, product_id)
 );
 
--- 4. ORDERS (Acquisition History)
--- Records of completed transactions and their status
+-- 4. ORDERS (Transaction logs)
 create table public.orders (
   id uuid default gen_random_uuid() primary key,
   user_id uuid references auth.users on delete set null,
   customer_email text not null,
-  items jsonb not null, -- Stores the CartItem array
+  items jsonb not null,
   total numeric not null,
   status text not null default 'pending' check (status in ('pending', 'completed', 'shipped')),
   stripe_session_id text,
   created_at timestamp with time zone default timezone('utc'::text, now())
 );
 
--- 5. ROW LEVEL SECURITY (RLS)
--- Prevent unauthorized access to sensitive data
+-- 5. COMMUNITY ASSETS (Gallery submission archive)
+create table public.community_assets (
+  id uuid default gen_random_uuid() primary key,
+  user_id uuid references auth.users on delete set null,
+  title text not null,
+  image_url text not null,
+  artist_name text not null,
+  description text,
+  status text not null default 'pending' check (status in ('pending', 'approved')),
+  created_at timestamp with time zone default timezone('utc'::text, now())
+);
+
+-- ENABLE ROW LEVEL SECURITY
 alter table public.profiles enable row level security;
 alter table public.reviews enable row level security;
 alter table public.wishlist enable row level security;
 alter table public.orders enable row level security;
+alter table public.community_assets enable row level security;
 
--- 6. SECURITY POLICIES
--- Profiles: Users see/edit only themselves
+-- POLICIES: PROFILES
 create policy "Profiles: Private View" on public.profiles for select using (auth.uid() = id);
-create policy "Profiles: Private Edit" on public.profiles for update using (auth.uid() = id);
 
--- Reviews: Publicly readable, privately writable
-create policy "Reviews: Public Sync" on public.reviews for select using (true);
+-- POLICIES: REVIEWS
+create policy "Reviews: Public View" on public.reviews for select using (true);
 create policy "Reviews: Auth Insert" on public.reviews for insert with check (auth.role() = 'authenticated');
 
--- Wishlist: Strictly private
+-- POLICIES: WISHLIST
 create policy "Wishlist: Private Access" on public.wishlist for all using (auth.uid() = user_id);
 
--- Orders: Users see own, Admins see all
+-- POLICIES: ORDERS
 create policy "Orders: Private View" on public.orders for select using (auth.uid() = user_id);
-create policy "Orders: Admin View" on public.orders for select using (
+create policy "Orders: Admin All" on public.orders for all using (
   exists (select 1 from public.profiles where id = auth.uid() and role = 'admin')
 );
 
--- 7. AUTOMATION: PROFILE GENERATOR
--- Automatically creates a 'profiles' entry when a user signs up via Magic Link
+-- POLICIES: COMMUNITY ASSETS
+create policy "Assets: Public View" on public.community_assets for select using (true);
+create policy "Assets: Auth Insert" on public.community_assets for insert with check (auth.role() = 'authenticated');
+create policy "Assets: Admin All" on public.community_assets for all using (
+  exists (select 1 from public.profiles where id = auth.uid() and role = 'admin')
+);
+
+-- AUTO-CREATE PROFILE ON SIGNUP
 create or replace function public.handle_new_user()
 returns trigger as $$
 begin
