@@ -40,9 +40,10 @@ const Setup: React.FC = () => {
 
   const masterSql = `-- STUDIOS STITCH: MASTER INFRASTRUCTURE SCHEMA
 -- Execute this in the Supabase SQL Editor
+-- This script uses IF NOT EXISTS to avoid errors with existing tables.
 
 -- 1. PROFILES
-create table public.profiles (
+create table if not exists public.profiles (
   id uuid references auth.users on delete cascade primary key,
   email text,
   role text default 'user' check (role in ('user', 'admin')),
@@ -50,7 +51,7 @@ create table public.profiles (
 );
 
 -- 2. REVIEWS
-create table public.reviews (
+create table if not exists public.reviews (
   id uuid default gen_random_uuid() primary key,
   product_id text not null,
   user_id uuid references auth.users on delete cascade not null,
@@ -61,7 +62,7 @@ create table public.reviews (
 );
 
 -- 3. WISHLIST
-create table public.wishlist (
+create table if not exists public.wishlist (
   id uuid default gen_random_uuid() primary key,
   user_id uuid references auth.users on delete cascade not null,
   product_id text not null,
@@ -70,7 +71,7 @@ create table public.wishlist (
 );
 
 -- 4. ORDERS
-create table public.orders (
+create table if not exists public.orders (
   id uuid default gen_random_uuid() primary key,
   user_id uuid references auth.users on delete set null,
   customer_email text not null,
@@ -82,7 +83,7 @@ create table public.orders (
 );
 
 -- 5. COMMUNITY ASSETS
-create table public.community_assets (
+create table if not exists public.community_assets (
   id uuid default gen_random_uuid() primary key,
   user_id uuid references auth.users on delete set null,
   title text not null,
@@ -99,12 +100,32 @@ alter table public.wishlist enable row level security;
 alter table public.orders enable row level security;
 alter table public.community_assets enable row level security;
 
-create policy "Profiles: Private View" on public.profiles for select using (auth.uid() = id);
-create policy "Reviews: Public Sync" on public.reviews for select using (true);
-create policy "Wishlist: Private Access" on public.wishlist for all using (auth.uid() = user_id);
-create policy "Orders: Private View" on public.orders for select using (auth.uid() = user_id);
-create policy "Assets: Public Sync" on public.community_assets for select using (true);
-create policy "Assets: Auth Insert" on public.community_assets for insert with check (auth.role() = 'authenticated');
+do $$
+begin
+    if not exists (select 1 from pg_policies where policyname = 'Profiles: Private View') then
+        create policy "Profiles: Private View" on public.profiles for select using (auth.uid() = id);
+    end if;
+
+    if not exists (select 1 from pg_policies where policyname = 'Reviews: Public Sync') then
+        create policy "Reviews: Public Sync" on public.reviews for select using (true);
+    end if;
+
+    if not exists (select 1 from pg_policies where policyname = 'Wishlist: Private Access') then
+        create policy "Wishlist: Private Access" on public.wishlist for all using (auth.uid() = user_id);
+    end if;
+
+    if not exists (select 1 from pg_policies where policyname = 'Orders: Private View') then
+        create policy "Orders: Private View" on public.orders for select using (auth.uid() = user_id);
+    end if;
+
+    if not exists (select 1 from pg_policies where policyname = 'Assets: Public Sync') then
+        create policy "Assets: Public Sync" on public.community_assets for select using (true);
+    end if;
+
+    if not exists (select 1 from pg_policies where policyname = 'Assets: Auth Insert') then
+        create policy "Assets: Auth Insert" on public.community_assets for insert with check (auth.role() = 'authenticated');
+    end if;
+end $$;
 
 create or replace function public.handle_new_user()
 returns trigger as $$
@@ -115,6 +136,7 @@ begin
 end;
 $$ language plpgsql security definer;
 
+drop trigger if exists on_auth_user_created on auth.users;
 create trigger on_auth_user_created
   after insert on auth.users
   for each row execute procedure public.handle_new_user();`;
