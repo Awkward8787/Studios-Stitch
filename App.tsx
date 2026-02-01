@@ -149,15 +149,19 @@ const AppContent: React.FC = () => {
 
   useEffect(() => {
     const loadData = async () => {
+      // Independent loaders to prevent one service failure from crashing app
       try {
-        const [fetchedProducts, currentUser] = await Promise.all([
-          printfulService.fetchProducts(),
-          supabaseService.getCurrentUser()
-        ]);
+        const fetchedProducts = await printfulService.fetchProducts();
         setProducts(fetchedProducts);
+      } catch (err) {
+        console.warn("Product sync failed, continuing...", err);
+      }
+
+      try {
+        const currentUser = await supabaseService.getCurrentUser();
         setUser(currentUser);
       } catch (err) {
-        console.error("Initialization failed", err);
+        console.warn("Auth sync failed, continuing...", err);
       }
     };
     loadData();

@@ -1,34 +1,51 @@
 
 import { Product, ProductVariant } from '../types';
+import { configService } from './configService';
 
 class PrintfulService {
   private async apiFetch(endpoint: string) {
     try {
+      const { printfulApiKey } = configService.getConfig();
+      
+      const headers: Record<string, string> = {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+        'Cache-Control': 'no-cache'
+      };
+
+      if (printfulApiKey) {
+        headers['x-printful-token'] = printfulApiKey;
+      }
+
       const response = await fetch(endpoint, {
         method: 'GET',
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json',
-          'Cache-Control': 'no-cache'
-        }
+        headers
       });
 
       const text = await response.text();
-      let data: any;
-      
-      try {
-        data = JSON.parse(text.trim());
-      } catch (e) {
-        throw new Error(`MALFORMED_RESPONSE: ${text.slice(0, 50)}...`);
-      }
 
       if (!response.ok) {
-        if (response.status === 401) throw new Error('PRINTFUL_AUTH_FAILED');
-        throw new Error(data.error || `Server Error ${response.status}`);
+        // Try to parse structured error from backend
+        try {
+            const json = JSON.parse(text);
+            if (response.status === 401) throw new Error('PRINTFUL_AUTH_FAILED');
+            throw new Error(json.error || `SERVER_ERROR_${response.status}`);
+        } catch (e: any) {
+            // If it's not JSON (e.g. 404 HTML/Text from proxy/gateway), throw text
+            const errorMsg = text.length < 100 ? text : `HTTP_${response.status}`;
+            if (response.status === 401) throw new Error('PRINTFUL_AUTH_FAILED');
+            throw new Error(e.message === 'PRINTFUL_AUTH_FAILED' ? e.message : `API_ERROR: ${errorMsg}`);
+        }
       }
-      return data;
+
+      try {
+        return JSON.parse(text);
+      } catch (e) {
+        console.error("Raw response:", text.slice(0, 100));
+        throw new Error('MALFORMED_JSON_RESPONSE');
+      }
     } catch (err: any) {
-      console.error('STITCH_PROTOCOL_FAILURE:', err.message);
+      console.error(`STITCH_PROTOCOL_FAILURE [${endpoint}]:`, err.message);
       throw err;
     }
   }
@@ -53,13 +70,20 @@ class PrintfulService {
       }
 
       const productsToFetch = rawProducts.slice(0, 24);
-      const detailPromises = productsToFetch.map((p: any) => this.getProduct(p.id.toString()));
+      // We map individually to handle partial failures gracefully
+      const detailPromises = productsToFetch.map((p: any) => 
+        this.getProduct(p.id.toString()).catch(e => {
+            console.warn(`Failed to load product ${p.id}`, e);
+            return null;
+        })
+      );
       const products = await Promise.all(detailPromises);
       
       return products.filter((p): p is Product => p !== null);
     } catch (err: any) {
       console.error('STITCH_TERMINAL: Bulk fetch failed.', err);
-      throw err;
+      // Don't crash the app, return empty array so UI can show empty state or error banner
+      return []; 
     }
   }
 

@@ -21,8 +21,10 @@ const STRIPE_WEBHOOK_SECRET = (process.env.STRIPE_WEBHOOK_SECRET || '').trim();
 const stripe = STRIPE_SECRET_KEY ? new Stripe(STRIPE_SECRET_KEY) : null;
 
 // --- HYBRID PRINTFUL HANDLER ---
-async function fetchFromPrintful(endpoint, method = 'GET', body = null) {
-  if (!PRINTFUL_TOKEN) {
+async function fetchFromPrintful(endpoint, method = 'GET', body = null, reqToken = null) {
+  const token = reqToken || PRINTFUL_TOKEN;
+  
+  if (!token) {
     throw new Error('PRINTFUL_TOKEN_MISSING');
   }
   
@@ -30,7 +32,7 @@ async function fetchFromPrintful(endpoint, method = 'GET', body = null) {
   const options = {
     method,
     headers: {
-      'Authorization': `Bearer ${PRINTFUL_TOKEN}`,
+      'Authorization': `Bearer ${token}`,
       'Accept': 'application/json',
       'Content-Type': 'application/json'
     }
@@ -63,12 +65,15 @@ async function fetchFromPrintful(endpoint, method = 'GET', body = null) {
 // --- API ENDPOINTS ---
 
 app.get('/api/health', async (req, res) => {
+  const reqToken = req.headers['x-printful-token'];
+  const effectiveToken = reqToken || PRINTFUL_TOKEN;
+  
   let printfulStatus = 'unknown';
   let storeDetails = null;
   try {
-    if (PRINTFUL_TOKEN) {
+    if (effectiveToken) {
       // Handshake check
-      const storesResponse = await fetchFromPrintful('/store');
+      const storesResponse = await fetchFromPrintful('/store', 'GET', null, effectiveToken);
       storeDetails = storesResponse.result || null;
       printfulStatus = 'connected_v1';
     } else {
@@ -76,7 +81,7 @@ app.get('/api/health', async (req, res) => {
     }
   } catch (err) {
     try {
-        const v2Response = await fetchFromPrintful('/v2/stores');
+        const v2Response = await fetchFromPrintful('/v2/stores', 'GET', null, effectiveToken);
         storeDetails = v2Response.data?.[0] || null;
         printfulStatus = 'connected_v2';
     } catch (v2Err) {
@@ -95,12 +100,13 @@ app.get('/api/health', async (req, res) => {
 });
 
 app.get('/api/printful/products', async (req, res) => {
+  const reqToken = req.headers['x-printful-token'];
   try {
     let data;
     try {
-        data = await fetchFromPrintful('/sync/products');
+        data = await fetchFromPrintful('/sync/products', 'GET', null, reqToken);
     } catch (v1Err) {
-        data = await fetchFromPrintful('/v2/sync-products');
+        data = await fetchFromPrintful('/v2/sync-products', 'GET', null, reqToken);
     }
     return res.json(data);
   } catch (err) {
@@ -109,12 +115,13 @@ app.get('/api/printful/products', async (req, res) => {
 });
 
 app.get('/api/printful/products/:id', async (req, res) => {
+  const reqToken = req.headers['x-printful-token'];
   try {
     let data;
     try {
-        data = await fetchFromPrintful(`/sync/products/${req.params.id}`);
+        data = await fetchFromPrintful(`/sync/products/${req.params.id}`, 'GET', null, reqToken);
     } catch (v1Err) {
-        data = await fetchFromPrintful(`/v2/sync-products/${req.params.id}`);
+        data = await fetchFromPrintful(`/v2/sync-products/${req.params.id}`, 'GET', null, reqToken);
     }
     return res.json(data);
   } catch (err) {
@@ -154,6 +161,11 @@ app.post('/api/checkout/create-session', async (req, res) => {
   }
 });
 
+// Explicit 404 handler for API routes
+app.use('/api/*', (req, res) => {
+  res.status(404).json({ error: 'API_ENDPOINT_NOT_FOUND' });
+});
+
 const distPath = path.resolve(__dirname, 'dist');
 app.use(cors());
 app.use(express.json());
@@ -164,7 +176,7 @@ app.get('*', (req, res) => {
   if (fs.existsSync(indexPath)) {
     res.sendFile(indexPath);
   } else {
-    res.status(404).send('Build folder missing.');
+    res.status(404).send('Build folder missing. Run "npm run build" first.');
   }
 });
 

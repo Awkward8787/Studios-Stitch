@@ -241,16 +241,16 @@ create trigger on_auth_user_created
             <div className="space-y-4">
                <div className="p-4 bg-black/50 border border-zinc-800/50">
                   <p className="text-[9px] text-zinc-500 leading-relaxed uppercase tracking-widest font-bold">
-                    The Printful Bridge requires a <span className="text-white">Personal Access Token</span> configured in your backend <span className="text-fuchsia-studio font-mono">.env</span> file.
+                    Enter your <span className="text-white">Personal Access Token</span> to override the server default.
                   </p>
                </div>
                <div className="space-y-2">
-                <label className="text-[9px] font-black text-zinc-600 uppercase tracking-widest">Token ID (UI Preview)</label>
+                <label className="text-[9px] font-black text-zinc-600 uppercase tracking-widest">Token ID</label>
                 <input 
                   type="password"
-                  disabled
-                  className="w-full bg-zinc-950 border border-zinc-900 p-4 text-[10px] font-mono text-zinc-700 cursor-not-allowed"
+                  className="w-full bg-black border border-zinc-800 p-4 text-[10px] font-mono focus:border-fuchsia-studio outline-none transition-colors text-white"
                   value={config.printfulApiKey}
+                  onChange={e => setConfig({ ...config, printfulApiKey: e.target.value })}
                 />
               </div>
             </div>
