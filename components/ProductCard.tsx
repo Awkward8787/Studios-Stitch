@@ -11,85 +11,58 @@ interface ProductCardProps {
 const ProductCard: React.FC<ProductCardProps> = ({ product, onAddToCart }) => {
   const [imageError, setImageError] = useState(false);
 
-  const handleQuickAdd = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (onAddToCart && product.variants.length > 0) {
-      // Add the first available variant (default)
-      onAddToCart(product, product.variants[0].size);
-    }
-  };
-
   return (
-    <div className="relative group perspective-1000">
-      <Link 
-        to={`/product/${product.id}`} 
-        className="block bg-white stitch-corner transition-all duration-500 group-hover:-translate-y-2 group-hover:shadow-[0_20px_50px_rgba(192,0,90,0.1)]"
-      >
-        <div className="aspect-[3/4] overflow-hidden relative p-1 bg-black preserve-3d">
-          <div className="w-full h-full transition-transform duration-1000 group-hover:ghost-spin-active">
-            {imageError ? (
-              <div className="w-full h-full flex flex-col items-center justify-center bg-zinc-900 border border-zinc-800 p-8 text-center">
-                <div className="mb-4">
-                  <span className="text-fuchsia-studio text-4xl font-black italic">×</span>
-                </div>
-                <div className="space-y-2">
-                  <span className="block text-[8px] font-black uppercase tracking-[0.4em] text-zinc-500">Asset Sync Failure</span>
-                  <div className="h-[1px] w-8 bg-zinc-800 mx-auto" />
-                  <span className="block text-[7px] font-mono text-zinc-700 uppercase tracking-widest">ID: {product.id.slice(0, 8)}</span>
-                </div>
-              </div>
-            ) : (
-              <img 
-                src={product.thumbnail_url} 
-                alt={product.name} 
-                onError={() => setImageError(true)}
-                className="w-full h-full object-cover grayscale transition-all duration-1000 group-hover:grayscale-0 group-hover:scale-105"
-              />
-            )}
-          </div>
-          
-          {/* Fuchsia Accent on Hover */}
-          <div className="absolute inset-0 bg-fuchsia-studio opacity-0 group-hover:opacity-10 transition-opacity pointer-events-none" />
-          
-          {/* Quick Add Button */}
-          {onAddToCart && !imageError && (
-            <button 
-              onClick={handleQuickAdd}
-              className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-fuchsia-studio text-white p-3 rounded-full shadow-xl opacity-0 translate-y-4 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300 hover:scale-110 z-30"
-              title="Quick Add to Bag"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/><line x1="12" y1="13" x2="12" y2="19"/><line x1="9" y1="16" x2="15" y2="16"/>
-              </svg>
-            </button>
+    <div className="group bg-black border border-zinc-900 hover:border-fuchsia-studio/50 transition-all rounded-sm">
+      <Link to={`/product/${product.id}`} className="block relative">
+        <div className="aspect-[4/5] bg-zinc-950 overflow-hidden relative">
+          {imageError ? (
+            <div className="w-full h-full flex flex-col items-center justify-center text-zinc-800 uppercase font-black text-[8px] tracking-widest">Asset_Missing</div>
+          ) : (
+            <img 
+              src={product.thumbnail_url} 
+              alt={product.name} 
+              onError={() => setImageError(true)}
+              className="w-full h-full object-cover grayscale transition-all duration-700 group-hover:grayscale-0 group-hover:scale-110"
+            />
           )}
-
-          {/* Internal Wound Stitches */}
-          <div className="absolute top-4 left-4 text-white text-[12px] font-black opacity-0 group-hover:opacity-100 transition-all duration-500">×</div>
-          <div className="absolute bottom-4 right-4 text-white text-[12px] font-black opacity-0 group-hover:opacity-100 transition-all duration-500">×</div>
           
-          {/* Label Tag */}
-          <div className="absolute top-4 right-4 bg-fuchsia-studio text-white text-[8px] font-black px-2 py-1 transform rotate-90 origin-right tracking-widest">
-            S.STITCH // ARC01
-          </div>
-        </div>
-        
-        <div className="p-6 bg-white border-t border-zinc-100 flex flex-col gap-2">
-          <div className="flex justify-between items-start gap-4">
-            <h3 className="text-black text-xs font-black tracking-tighter uppercase leading-tight flex-1">{product.name}</h3>
-            <span className="text-fuchsia-studio font-black italic text-xs">×</span>
-          </div>
-          <div className="flex justify-between items-center mt-2">
-            <p className="text-zinc-400 text-[10px] font-black uppercase tracking-[0.2em]">$ {product.price.toFixed(2)}</p>
-            <div className="overflow-hidden">
-               <span className="text-black text-[9px] font-black uppercase tracking-widest transform translate-y-full group-hover:translate-y-0 transition-transform block">
-                 {imageError ? 'Corrupted Data' : 'Deploy Object'}
-               </span>
-            </div>
+          {/* Badge */}
+          <div className="absolute top-3 left-3 bg-fuchsia-studio text-white text-[8px] font-black px-2 py-1 uppercase tracking-widest">New</div>
+          
+          {/* Action Overlay */}
+          <div className="absolute inset-x-0 bottom-0 p-4 translate-y-full group-hover:translate-y-0 transition-transform bg-gradient-to-t from-black to-transparent">
+             <button 
+               onClick={(e) => {
+                 e.preventDefault();
+                 if (onAddToCart && product.variants.length > 0) onAddToCart(product, product.variants[0].size);
+               }}
+               className="w-full bg-white text-black py-3 font-black uppercase text-[9px] tracking-[0.2em] hover:bg-fuchsia-studio hover:text-white transition-all shadow-xl"
+             >
+               Quick Add +
+             </button>
           </div>
         </div>
       </Link>
+      
+      <div className="p-5 flex flex-col gap-2">
+        <div className="flex justify-between items-start">
+          <Link to={`/product/${product.id}`} className="text-[11px] font-black uppercase tracking-tight text-white hover:text-fuchsia-studio transition-colors line-clamp-1">
+            {product.name}
+          </Link>
+        </div>
+        
+        <div className="flex items-center gap-1">
+          {[1, 2, 3, 4, 5].map(star => (
+            <span key={star} className="text-[10px] text-fuchsia-studio">★</span>
+          ))}
+          <span className="text-[8px] text-zinc-600 font-black ml-1 uppercase">(24 Reviews)</span>
+        </div>
+
+        <div className="flex justify-between items-center mt-2 pt-2 border-t border-zinc-900">
+          <p className="text-xs font-black text-zinc-300">$ {product.price.toFixed(2)}</p>
+          <span className="text-[8px] font-black text-zinc-600 uppercase tracking-widest">Artist Original</span>
+        </div>
+      </div>
     </div>
   );
 };

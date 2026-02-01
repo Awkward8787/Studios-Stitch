@@ -24,70 +24,45 @@ const Navbar: React.FC<NavbarProps> = ({ cartCount, onCartToggle, userEmail, onL
 
   return (
     <header className="sticky top-0 z-50">
-      <div className="bg-black/95 backdrop-blur-sm border-b border-zinc-900 py-4 px-6">
+      {/* Promo Bar */}
+      <div className="bg-fuchsia-studio text-white text-[9px] font-black uppercase tracking-[0.3em] py-2 text-center">
+        Free Shipping on all orders over $75 // Limited Edition Creator Drops
+      </div>
+
+      <div className="bg-black border-b border-zinc-900 py-4 px-6">
         <div className="max-w-[1600px] mx-auto flex justify-between items-center">
-          <div className="flex items-center gap-12">
-            <Link to="/" className="group block h-10">
-              <img 
-                src="logo.png" 
-                alt="Studios Stitch" 
-                className="h-full w-auto logo-glow grayscale transition-all group-hover:grayscale-0"
-                onError={(e) => {
-                  (e.target as HTMLImageElement).style.display = 'none';
-                  (e.target as HTMLImageElement).parentElement!.innerHTML = '<span class="text-xl font-black uppercase tracking-tighter">Studios<span class="text-fuchsia-studio">Stitch</span></span>';
-                }}
-              />
+          <div className="flex items-center gap-10">
+            <Link to="/" className="group block">
+              <div className="text-2xl font-black uppercase tracking-tighter italic logo-glow">
+                STITCH<span className="text-fuchsia-studio">.</span>
+              </div>
             </Link>
             
-            <nav className="hidden md:flex gap-10 text-[10px] font-black tracking-[0.3em] uppercase text-zinc-500">
-              <Link to="/shop" className={`hover:text-white transition-all relative ${location.pathname === '/shop' ? 'text-white' : ''}`}>
-                Inventory
-                {location.pathname === '/shop' && <div className="absolute -bottom-1 left-0 w-full h-[1px] bg-fuchsia-studio" />}
-              </Link>
-              <Link to="/collections" className={`hover:text-white transition-all relative ${location.pathname === '/collections' ? 'text-white' : ''}`}>
-                Series
-                {location.pathname === '/collections' && <div className="absolute -bottom-1 left-0 w-full h-[1px] bg-fuchsia-studio" />}
-              </Link>
-              {userEmail && (
-                <Link to="/profile" className={`hover:text-white transition-all relative ${location.pathname === '/profile' ? 'text-white' : ''}`}>
-                  Manifest
-                  {location.pathname === '/profile' && <div className="absolute -bottom-1 left-0 w-full h-[1px] bg-fuchsia-studio" />}
-                </Link>
-              )}
+            <nav className="hidden lg:flex gap-8 text-[10px] font-black tracking-[0.2em] uppercase text-zinc-400">
+              <Link to="/shop" className="hover:text-fuchsia-studio transition-all">T-Shirts</Link>
+              <Link to="/shop" className="hover:text-fuchsia-studio transition-all">Hoodies</Link>
+              <Link to="/collections" className="hover:text-fuchsia-studio transition-all">Collections</Link>
+              <Link to="/shop" className="hover:text-fuchsia-studio transition-all">Accessories</Link>
             </nav>
           </div>
           
-          <div className="flex items-center gap-8">
-            <div className="hidden lg:flex items-center gap-2">
-              <span className="wound-stitch">× × ×</span>
-              <span className={`text-[8px] font-black tracking-[0.4em] uppercase transition-colors ${isLive === true ? 'text-fuchsia-studio' : isLive === false ? 'text-red-600' : 'text-zinc-700'}`}>
-                Status: {isLive === true ? 'Live' : isLive === false ? 'Offline' : 'Syncing'}
-              </span>
+          <div className="flex items-center gap-6">
+            <div className="hidden sm:flex items-center gap-2">
+              <div className={`w-2 h-2 rounded-full ${isLive ? 'bg-fuchsia-studio animate-pulse' : 'bg-zinc-800'}`} />
+              <span className="text-[8px] font-black text-zinc-600 uppercase tracking-widest">Server_Live</span>
             </div>
 
-            <div className="flex items-center gap-6">
+            <div className="flex items-center gap-5">
               {userEmail ? (
-                <div className="flex items-center gap-4">
-                  <Link to="/profile" className="text-[9px] font-black uppercase tracking-widest text-white border-b border-fuchsia-studio">
-                    {userEmail.split('@')[0]}
-                  </Link>
-                  <button onClick={onLogout} className="text-[9px] font-black uppercase tracking-widest text-zinc-500 hover:text-fuchsia-studio transition-colors">
-                    Logoff
-                  </button>
-                </div>
+                <button onClick={onLogout} className="text-[9px] font-black uppercase tracking-widest text-zinc-500 hover:text-white">Logoff</button>
               ) : (
-                <Link to="/auth" className="text-[9px] font-black uppercase tracking-widest text-zinc-500 hover:text-white transition-colors">
-                  Authenticate
-                </Link>
+                <Link to="/auth" className="text-[9px] font-black uppercase tracking-widest text-zinc-500 hover:text-white transition-colors">Login</Link>
               )}
               
-              <button onClick={onCartToggle} className="relative group">
-                <div className="flex flex-col items-center">
-                  <span className="text-[10px] font-black tracking-tighter group-hover:text-fuchsia-studio transition-colors">BAG</span>
-                  <div className="h-[1px] w-full bg-zinc-800 group-hover:bg-fuchsia-studio transition-colors" />
-                </div>
+              <button onClick={onCartToggle} className="relative bg-zinc-900 p-2 border border-zinc-800 hover:border-fuchsia-studio transition-all">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
                 {cartCount > 0 && (
-                  <span className="absolute -top-3 -right-3 bg-fuchsia-studio text-white text-[9px] font-black w-4 h-4 flex items-center justify-center rounded-sm">
+                  <span className="absolute -top-1 -right-1 bg-fuchsia-studio text-white text-[8px] font-bold w-4 h-4 flex items-center justify-center rounded-full">
                     {cartCount}
                   </span>
                 )}
@@ -96,7 +71,6 @@ const Navbar: React.FC<NavbarProps> = ({ cartCount, onCartToggle, userEmail, onL
           </div>
         </div>
       </div>
-      <div className="stitch-line-h w-full opacity-50" />
     </header>
   );
 };

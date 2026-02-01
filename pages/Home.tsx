@@ -11,128 +11,102 @@ interface HomeProps {
 
 const Home: React.FC<HomeProps> = ({ products, onAddToCart }) => {
   return (
-    <div className="flex flex-col">
-      {/* Hero Section */}
-      <section className="relative h-[95vh] flex flex-col items-center justify-center text-center px-6 overflow-hidden bg-black">
-        {/* Gritty Texture Overlay */}
-        <div className="absolute inset-0 z-0 opacity-30 pointer-events-none mix-blend-overlay">
+    <div className="flex flex-col bg-black">
+      {/* Threadless Style Hero Banner */}
+      <section className="relative px-6 py-12">
+        <Link to="/shop" className="group block relative aspect-[21/9] md:aspect-[21/6] bg-zinc-900 overflow-hidden rounded-sm border border-zinc-800">
+          <div className="absolute inset-0 bg-gradient-to-r from-fuchsia-studio/40 to-black/80 z-10" />
           <img 
-            src="https://images.unsplash.com/photo-1550684848-fac1c5b4e853?q=80&w=2000&auto=format&fit=crop" 
-            className="w-full h-full object-cover" 
-            alt="Texture"
+            src="https://images.unsplash.com/photo-1521572267360-ee0c2909d518?q=80&w=2000&auto=format&fit=crop" 
+            className="w-full h-full object-cover grayscale opacity-50 transition-transform duration-700 group-hover:scale-105" 
+            alt="Hero Banner"
           />
-        </div>
-
-        {/* Large Background Graffiti Logo Watermark */}
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-[0.03] select-none">
-          <img src="logo.png" className="w-[80%] max-w-5xl grayscale invert" alt="" />
-        </div>
-
-        <div className="relative z-10 max-w-5xl w-full flex flex-col items-center">
-          <div className="mb-12 logo-glow">
-            <img 
-              src="logo.png" 
-              className="w-48 md:w-80 h-auto mx-auto" 
-              alt="Studios Stitch Logo"
-              onError={(e) => {
-                (e.target as HTMLImageElement).style.display = 'none';
-              }}
-            />
-          </div>
-
-          <div className="space-y-6">
-            <div className="inline-flex items-center gap-4">
-              <span className="wound-stitch">× ×</span>
-              <span className="text-[10px] uppercase font-black tracking-[0.8em] text-white">Advanced Textile Engineering</span>
-              <span className="wound-stitch">× ×</span>
-            </div>
-            
-            <h1 className="text-5xl md:text-[8rem] font-black tracking-tighter uppercase leading-[0.85] text-white italic">
-              UNIFORM FOR THE<br/>
-              <span className="text-transparent" style={{WebkitTextStroke: '1px rgba(255,255,255,0.8)'}}>UNDERGROUND</span>
+          <div className="absolute inset-0 z-20 flex flex-col justify-center px-12 md:px-24 max-w-4xl">
+            <span className="text-fuchsia-studio font-black uppercase tracking-[0.4em] text-xs mb-4">Limited Edition Release</span>
+            <h1 className="text-5xl md:text-8xl font-black uppercase tracking-tighter leading-none italic mb-8">
+              THE <span className="text-fuchsia-studio">STITCH</span><br/>ARCHIVE 01.
             </h1>
-            
-            <p className="text-zinc-500 text-[10px] md:text-xs uppercase tracking-[0.4em] max-w-xl mx-auto font-bold pt-6 border-t border-zinc-900 mt-8">
-              Modular silhouettes constructed for <span className="text-fuchsia-studio">creative disruption</span>. 
-              Archive 01 is now open for acquisition.
-            </p>
-            
-            <div className="pt-16 flex flex-col md:flex-row gap-8 justify-center items-center">
-              <Link 
-                to="/shop" 
-                className="group relative bg-white text-black px-16 py-5 font-black uppercase tracking-[0.2em] text-xs transition-all overflow-hidden"
-              >
-                <span className="relative z-10">Access Inventory</span>
-                <div className="absolute top-0 left-0 w-full h-full bg-fuchsia-studio translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
-                <div className="absolute top-1 left-1 text-[8px] text-black">×</div>
-                <div className="absolute bottom-1 right-1 text-[8px] text-black">×</div>
-              </Link>
-              
-              <Link 
-                to="/collections" 
-                className="text-[10px] font-black uppercase tracking-[0.5em] text-zinc-500 hover:text-white transition-all flex items-center gap-4"
-              >
-                <span>View Archive</span>
-                <span className="text-fuchsia-studio">/</span>
-                <span>01</span>
-              </Link>
+            <div className="flex gap-4">
+              <span className="bg-white text-black px-10 py-4 font-black uppercase text-[10px] tracking-widest group-hover:bg-fuchsia-studio group-hover:text-white transition-all">Shop All Shirts</span>
             </div>
           </div>
-        </div>
-
-        {/* Floating Stitch Lines */}
-        <div className="absolute top-1/4 left-0 stitch-line-h w-1/4 opacity-20" />
-        <div className="absolute bottom-1/4 right-0 stitch-line-h w-1/4 opacity-20" />
+        </Link>
       </section>
 
-      {/* Featured Grid with Wound Stitches */}
-      <section className="py-40 px-6 max-w-[1600px] mx-auto w-full relative">
-        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-end mb-24 gap-12">
-          <div className="relative">
-             <div className="absolute -top-10 -left-6 text-fuchsia-studio text-6xl font-black opacity-10 select-none italic">× × ×</div>
-             <span className="text-fuchsia-studio text-[10px] uppercase font-black tracking-[0.5em]">Protocol 001 / New Drops</span>
-             <h2 className="text-6xl font-black uppercase tracking-tighter mt-4 text-white italic">Recent<br/>Manifestations</h2>
-          </div>
-          <div className="flex gap-12 items-center">
-             <div className="hidden sm:block text-right">
-                <p className="text-[10px] font-black text-zinc-600 uppercase tracking-widest">Global Logistics</p>
-                <p className="text-xs font-black text-zinc-400 uppercase tracking-[0.2em]">Duty Free Worldwide</p>
-             </div>
-             <Link to="/shop" className="bg-zinc-900 border border-zinc-800 text-[10px] font-black uppercase tracking-[0.3em] px-10 py-5 hover:border-fuchsia-studio hover:text-fuchsia-studio transition-all">
-                Full Manifest
-             </Link>
+      {/* Shop By Category Circles */}
+      <section className="py-12 px-6">
+        <div className="max-w-[1600px] mx-auto">
+          <div className="flex flex-wrap justify-center gap-8 md:gap-16">
+            {[
+              { name: 'T-Shirts', img: 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=300&h=300&fit=crop' },
+              { name: 'Hoodies', img: 'https://images.unsplash.com/photo-1556821840-3a63f95609a7?w=300&h=300&fit=crop' },
+              { name: 'Art Prints', img: 'https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?w=300&h=300&fit=crop' },
+              { name: 'Accessories', img: 'https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=300&h=300&fit=crop' }
+            ].map(cat => (
+              <Link key={cat.name} to="/shop" className="group flex flex-col items-center gap-4">
+                <div className="w-24 h-24 md:w-32 md:h-32 rounded-full overflow-hidden border-2 border-zinc-900 group-hover:border-fuchsia-studio transition-all">
+                  <img src={cat.img} className="w-full h-full object-cover grayscale group-hover:grayscale-0" alt={cat.name} />
+                </div>
+                <span className="text-[10px] font-black uppercase tracking-widest text-zinc-500 group-hover:text-white">{cat.name}</span>
+              </Link>
+            ))}
           </div>
         </div>
+      </section>
+
+      {/* Featured Grid */}
+      <section className="py-20 px-6 max-w-[1600px] mx-auto w-full">
+        <div className="flex justify-between items-end mb-12">
+          <div>
+            <h2 className="text-3xl font-black uppercase tracking-tighter italic">New Designer Drops</h2>
+            <div className="h-1 w-20 bg-fuchsia-studio mt-2" />
+          </div>
+          <Link to="/shop" className="text-[10px] font-black uppercase tracking-widest text-zinc-500 hover:text-fuchsia-studio">See Everything →</Link>
+        </div>
         
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {products.slice(0, 4).map(product => (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-4 gap-6">
+          {products.slice(0, 12).map(product => (
             <ProductCard key={product.id} product={product} onAddToCart={onAddToCart} />
           ))}
         </div>
       </section>
 
-      {/* Brand Terminal Section */}
-      <section className="bg-fuchsia-studio text-white py-40 px-6 relative overflow-hidden">
-        {/* Background 'Stitch' text */}
-        <div className="absolute top-0 left-0 w-full h-full opacity-10 flex items-center justify-center pointer-events-none select-none">
-          <div className="text-[25rem] font-black rotate-[-5deg] leading-none uppercase">STITCH</div>
-        </div>
-        
-        <div className="max-w-4xl mx-auto text-center space-y-12 relative z-10">
-          <div className="flex justify-center gap-6">
-            <span className="text-4xl font-black italic">×</span>
-            <span className="text-4xl font-black italic text-black">×</span>
-            <span className="text-4xl font-black italic">×</span>
-          </div>
-          <h2 className="text-5xl md:text-8xl font-black uppercase tracking-tighter italic leading-[0.85]">
-            "Fabric is our <span className="text-black">canvas</span>. Thread is our <span className="underline decoration-black decoration-8 underline-offset-8">voice</span>."
-          </h2>
-          <div className="flex flex-col items-center gap-8 mt-12">
-            <div className="h-[2px] w-48 bg-black/30" />
-            <p className="text-white font-black leading-relaxed text-xs md:text-base uppercase tracking-[0.4em] max-w-2xl">
-              Studios Stitch operates as a terminal for high-density textile assembly and subversive design. 
-              Each garment is a unique iteration of the studio's vision.
+      {/* Community Section */}
+      <section className="bg-zinc-950 border-y border-zinc-900 py-24 px-6 overflow-hidden">
+        <div className="max-w-[1600px] mx-auto grid grid-cols-1 lg:grid-cols-2 gap-24 items-center">
+          <div className="space-y-8">
+            <h2 className="text-6xl font-black uppercase tracking-tighter leading-none italic">
+              BUILT BY <br/>
+              <span className="text-fuchsia-studio underline decoration-8 decoration-white underline-offset-8">THE COMMUNITY.</span>
+            </h2>
+            <p className="text-zinc-500 text-sm uppercase tracking-widest leading-loose font-bold max-w-md">
+              Studios Stitch is more than a brand. It's a platform for subversive artists and underground designers. Submit your art and join the archive.
             </p>
+            <div className="flex gap-6">
+              <button className="bg-white text-black px-12 py-5 font-black uppercase tracking-widest text-[10px] hover:bg-fuchsia-studio hover:text-white transition-all">Submit Your Art</button>
+              <button className="border border-zinc-800 text-white px-12 py-5 font-black uppercase tracking-widest text-[10px] hover:border-white transition-all">Learn More</button>
+            </div>
+          </div>
+          <div className="grid grid-cols-3 gap-4 rotate-3 opacity-20">
+            {[1, 2, 3, 4, 5, 6].map(i => (
+              <div key={i} className="aspect-square bg-zinc-900 border border-zinc-800 stitch-corner" />
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Newsletter */}
+      <section className="py-32 px-6 text-center">
+        <div className="max-w-2xl mx-auto space-y-10">
+          <h3 className="text-4xl font-black uppercase tracking-tighter italic">Get the Latest Manifestos</h3>
+          <p className="text-zinc-500 text-[10px] uppercase tracking-[0.4em] font-bold">New drops, artist spotlights, and exclusive access codes.</p>
+          <div className="flex max-w-md mx-auto">
+            <input 
+              type="email" 
+              placeholder="YOUR@EMAIL.COM" 
+              className="flex-1 bg-zinc-900 border border-zinc-800 px-6 py-4 text-[10px] font-black uppercase tracking-widest focus:outline-none focus:border-fuchsia-studio"
+            />
+            <button className="bg-fuchsia-studio text-white px-10 py-4 font-black uppercase text-[10px] tracking-widest">Join</button>
           </div>
         </div>
       </section>

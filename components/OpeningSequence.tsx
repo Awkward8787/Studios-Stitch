@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 
 interface OpeningSequenceProps {
   onComplete: () => void;
@@ -8,12 +8,13 @@ interface OpeningSequenceProps {
 const OpeningSequence: React.FC<OpeningSequenceProps> = ({ onComplete }) => {
   const [phase, setPhase] = useState(0);
   const [logs, setLogs] = useState<string[]>([]);
+  const logIndexRef = useRef(0);
 
   const bootLogs = [
     "BRIDGE_HANDSHAKE: INITIATED",
     "PROTOCOL: STUDIOS_STITCH_ARCHIVE_01",
     "DECRYPTING_ASSETS: 14% ... 38% ... 82%",
-    "HOST: LOCALHOST:3001 // SECURE_SOCKET",
+    "HOST: SECURE_SOCKET",
     "VERIFYING_RETAIL_GRADE: PASSED",
     "IDENTITY_MANIFEST: AUTH_REQUIRED",
     "SYNCING_INVENTORY: COMPLETED",
@@ -21,12 +22,11 @@ const OpeningSequence: React.FC<OpeningSequenceProps> = ({ onComplete }) => {
   ];
 
   useEffect(() => {
-    // Phase 0: Scrolling logs
-    let logIndex = 0;
     const logInterval = setInterval(() => {
-      if (logIndex < bootLogs.length) {
-        setLogs(prev => [...prev, bootLogs[logIndex]]);
-        logIndex++;
+      if (logIndexRef.current < bootLogs.length) {
+        const nextLog = bootLogs[logIndexRef.current];
+        setLogs(prev => [...prev, nextLog]);
+        logIndexRef.current++;
       } else {
         clearInterval(logInterval);
         setTimeout(() => setPhase(1), 500);
@@ -38,19 +38,18 @@ const OpeningSequence: React.FC<OpeningSequenceProps> = ({ onComplete }) => {
 
   useEffect(() => {
     if (phase === 1) {
-      setTimeout(() => setPhase(2), 1500);
+      const timer = setTimeout(() => setPhase(2), 1500);
+      return () => clearTimeout(timer);
     }
   }, [phase]);
 
   return (
     <div className="fixed inset-0 z-[2000] bg-black flex flex-col items-center justify-center p-6 overflow-hidden">
-      {/* Background Static */}
       <div className="absolute inset-0 opacity-5 pointer-events-none">
         <img src="https://images.unsplash.com/photo-1550684848-fac1c5b4e853?q=80&w=2000&auto=format&fit=crop" className="w-full h-full object-cover grayscale" alt="" />
       </div>
 
       <div className="max-w-xl w-full relative z-10">
-        {/* Terminal Logs */}
         {phase === 0 && (
           <div className="space-y-2 font-mono text-[10px] text-zinc-500 uppercase tracking-widest">
             {logs.map((log, i) => (
@@ -61,7 +60,6 @@ const OpeningSequence: React.FC<OpeningSequenceProps> = ({ onComplete }) => {
           </div>
         )}
 
-        {/* Logo Reveal */}
         {phase >= 1 && (
           <div className={`transition-all duration-1000 flex flex-col items-center ${phase === 1 ? 'opacity-0 scale-95 blur-xl' : 'opacity-100 scale-100 blur-0'}`}>
             <div className="mb-12 logo-glow">
@@ -73,7 +71,6 @@ const OpeningSequence: React.FC<OpeningSequenceProps> = ({ onComplete }) => {
                   (e.target as HTMLImageElement).style.display = 'none';
                 }}
               />
-              {/* Fallback Logo Text */}
               <div className="text-6xl font-black uppercase tracking-tighter italic text-center">
                 Studios<span className="text-fuchsia-studio">Stitch</span>
               </div>
@@ -99,7 +96,6 @@ const OpeningSequence: React.FC<OpeningSequenceProps> = ({ onComplete }) => {
         )}
       </div>
 
-      {/* Decorative corners */}
       <div className="absolute top-12 left-12 w-24 h-[1px] bg-zinc-900" />
       <div className="absolute top-12 left-12 h-24 w-[1px] bg-zinc-900" />
       <div className="absolute bottom-12 right-12 w-24 h-[1px] bg-zinc-900" />

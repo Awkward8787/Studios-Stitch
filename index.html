@@ -6,7 +6,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Studios Stitch | Premium Essentials</title>
     
-    <!-- Favicon link using the logo -->
     <link rel="icon" type="image/png" href="logo.png">
 
     <script type="importmap">
@@ -19,14 +18,15 @@
     "@stripe/stripe-js": "https://esm.sh/@stripe/stripe-js@^8.7.0",
     "react-router-dom": "https://esm.sh/react-router-dom@^7.13.0",
     "@google/genai": "https://esm.sh/@google/genai@^1.38.0",
-    "vite": "https://esm.sh/vite@^7.3.1",
     "@vitejs/plugin-react": "https://esm.sh/@vitejs/plugin-react@^5.1.2",
+    "vite": "https://esm.sh/vite@^7.3.1",
+    "dotenv/": "https://esm.sh/dotenv@^17.2.3/",
     "express": "https://esm.sh/express@^5.2.1",
     "cors": "https://esm.sh/cors@^2.8.6",
     "path": "https://esm.sh/path@^0.12.7",
     "url": "https://esm.sh/url@^0.11.4",
     "stripe": "https://esm.sh/stripe@^20.3.0",
-    "dotenv/": "https://esm.sh/dotenv@^17.2.3/"
+    "fs": "https://esm.sh/fs@^0.0.1-security"
   }
 }
 </script>
@@ -103,7 +103,6 @@
         animation: spin3d 12s linear infinite;
       }
 
-      /* Graffiti Stitch Utility */
       .stitch-corner {
         position: relative;
       }
@@ -153,7 +152,6 @@
         font-family: 'Bebas Neue', sans-serif;
       }
 
-      /* Wound stitch group */
       .wound-stitch {
         display: inline-flex;
         gap: 2px;
@@ -162,7 +160,6 @@
         color: var(--fuchsia);
       }
 
-      /* Custom scrollbar */
       ::-webkit-scrollbar {
         width: 3px;
       }
@@ -199,7 +196,6 @@
     <div class="crt-overlay"></div>
     <div class="scanline"></div>
     <div id="root"></div>
-    <!-- Entry point for Vite application -->
-    <script type="module" src="/index.tsx"></script>
+    <script type="module" src="./index.tsx"></script>
   </body>
 </html>
