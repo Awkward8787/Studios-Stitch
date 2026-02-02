@@ -69,3 +69,32 @@ export interface User {
   email: string;
   role: 'user' | 'admin';
 }
+
+// --- DASHBOARD TYPES ---
+export interface Folder {
+  id: string;
+  name: string;
+  createdAt: any;
+}
+
+export interface FileDoc {
+  id: string;
+  name: string;
+  folderId?: string;
+  size: string;
+  createdAt: any;
+}
+
+export interface Note {
+  id: string;
+  title: string;
+  content: string;
+  createdAt: any;
+}
+
+export interface TeamMember {
+  id: string;
+  name: string;
+  role: string;
+  createdAt: any;
+}

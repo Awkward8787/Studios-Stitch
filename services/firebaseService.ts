@@ -9,7 +9,19 @@ import {
   onAuthStateChanged,
   sendEmailVerification
 } from "firebase/auth";
-import { User } from '../types';
+import { 
+  getFirestore, 
+  collection, 
+  addDoc, 
+  getDocs, 
+  query, 
+  where, 
+  orderBy, 
+  serverTimestamp,
+  deleteDoc,
+  doc
+} from "firebase/firestore";
+import { User, Folder, FileDoc, Note, TeamMember } from '../types';
 
 const firebaseConfig = {
   apiKey: "AIzaSyCy6hNqq3_fbVC1xJYv52kFhqbCP5jNElg",
@@ -24,8 +36,10 @@ const firebaseConfig = {
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
+export const db = getFirestore(app);
 
 export const firebaseService = {
+  // --- AUTH ---
   signIn: async (email, password) => {
     try {
       const result = await signInWithEmailAndPassword(auth, email, password);
@@ -53,13 +67,8 @@ export const firebaseService = {
   signUp: async (email, password) => {
     try {
       const result = await createUserWithEmailAndPassword(auth, email, password);
-      
-      // Send verification email
       await sendEmailVerification(result.user);
-      
-      // Sign out immediately so they aren't logged in automatically
       await signOut(auth);
-
       return result.user;
     } catch (error: any) {
       if (error.code === 'auth/email-already-in-use') {
@@ -75,15 +84,91 @@ export const firebaseService = {
 
   mapUser: (firebaseUser: FirebaseUser | null): User | null => {
     if (!firebaseUser) return null;
-    
-    // Strict enforcement: Do not map user if email is not verified
-    // This ensures the global app state remains null for unverified users
     if (!firebaseUser.emailVerified) return null;
 
     return {
       id: firebaseUser.uid,
       email: firebaseUser.email || '',
-      role: 'user' // Default role for now as we aren't fetching profiles
+      role: 'user' 
     };
+  },
+
+  // --- FIRESTORE: FOLDERS ---
+  createFolder: async (userId: string, name: string) => {
+    const colRef = collection(db, `users/${userId}/folders`);
+    await addDoc(colRef, {
+      name,
+      createdAt: serverTimestamp()
+    });
+  },
+
+  getFolders: async (userId: string): Promise<Folder[]> => {
+    const colRef = collection(db, `users/${userId}/folders`);
+    const q = query(colRef, orderBy('createdAt', 'desc'));
+    const snapshot = await getDocs(q);
+    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Folder));
+  },
+
+  // --- FIRESTORE: FILES ---
+  createFile: async (userId: string, name: string, size: string, folderId?: string) => {
+    const colRef = collection(db, `users/${userId}/files`);
+    await addDoc(colRef, {
+      name,
+      size,
+      folderId: folderId || null,
+      createdAt: serverTimestamp()
+    });
+  },
+
+  getFiles: async (userId: string, folderId?: string): Promise<FileDoc[]> => {
+    const colRef = collection(db, `users/${userId}/files`);
+    let q = query(colRef, orderBy('createdAt', 'desc'));
+    
+    // We filter in memory for simplicity if complex index is needed, 
+    // but here we can try basic filtering.
+    // Note: 'orderBy' and 'where' sometimes require composite indexes in Firestore.
+    // We will fetch all and filter in app to avoid index setup block.
+    
+    const snapshot = await getDocs(q);
+    const files = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as FileDoc));
+    
+    if (folderId) {
+      return files.filter(f => f.folderId === folderId);
+    }
+    return files.filter(f => !f.folderId); // Root files
+  },
+
+  // --- FIRESTORE: NOTES ---
+  createNote: async (userId: string, title: string, content: string) => {
+    const colRef = collection(db, `users/${userId}/notes`);
+    await addDoc(colRef, {
+      title,
+      content,
+      createdAt: serverTimestamp()
+    });
+  },
+
+  getNotes: async (userId: string): Promise<Note[]> => {
+    const colRef = collection(db, `users/${userId}/notes`);
+    const q = query(colRef, orderBy('createdAt', 'desc'));
+    const snapshot = await getDocs(q);
+    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Note));
+  },
+
+  // --- FIRESTORE: TEAM ---
+  addTeamMember: async (userId: string, name: string, role: string) => {
+    const colRef = collection(db, `users/${userId}/teamMembers`);
+    await addDoc(colRef, {
+      name,
+      role,
+      createdAt: serverTimestamp()
+    });
+  },
+
+  getTeamMembers: async (userId: string): Promise<TeamMember[]> => {
+    const colRef = collection(db, `users/${userId}/teamMembers`);
+    const q = query(colRef, orderBy('createdAt', 'desc'));
+    const snapshot = await getDocs(q);
+    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as TeamMember));
   }
 };
