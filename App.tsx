@@ -149,8 +149,8 @@ const AuthPage: React.FC<{ onAuthSuccess: (user: User) => void }> = ({ onAuthSuc
 
   return (
     <div className="max-w-md mx-auto py-48 px-6 text-center animate-in fade-in duration-500">
-      <div className="mb-12">
-        <span className="text-fuchsia-studio font-black text-2xl italic">× × ×</span>
+      <div className="mb-12 flex justify-center">
+        <img src="https://res.cloudinary.com/dkolptikx/image/upload/v1770064247/ss-logo_zt5ylx.png" className="h-16 w-auto logo-glow" alt="Studios Stitch" />
       </div>
       <h2 className="text-4xl font-black uppercase tracking-tighter mb-4 text-white italic">Security Clearance</h2>
       <p className="text-zinc-600 text-[10px] uppercase tracking-[0.4em] mb-12">
