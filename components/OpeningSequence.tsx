@@ -65,13 +65,13 @@ const OpeningSequence: React.FC<OpeningSequenceProps> = ({ onComplete }) => {
             <div className="mb-12 logo-glow">
               <img 
                 src="https://res.cloudinary.com/dkolptikx/image/upload/v1770064247/ss-logo_zt5ylx.png" 
-                className="w-64 h-auto mx-auto animate-pulse" 
+                className="w-48 md:w-64 h-auto mx-auto animate-pulse" 
                 alt="Studios Stitch"
                 onError={(e) => {
                   (e.target as HTMLImageElement).style.display = 'none';
                 }}
               />
-              <div className="text-6xl font-black uppercase tracking-tighter italic text-center">
+              <div className="text-4xl sm:text-6xl font-black uppercase tracking-tighter italic text-center break-words">
                 Studios<span className="text-fuchsia-studio">Stitch</span>
               </div>
             </div>

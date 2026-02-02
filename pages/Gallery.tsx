@@ -26,9 +26,9 @@ const Gallery: React.FC<GalleryProps> = ({ currentUser }) => {
 
   return (
     <div className="pt-32 px-6 max-w-7xl mx-auto min-h-screen">
-      <div className="flex flex-col md:flex-row justify-between items-end gap-8 mb-16">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-8 mb-16">
         <div>
-          <h1 className="text-6xl md:text-8xl font-black uppercase tracking-tighter italic leading-none">
+          <h1 className="text-4xl sm:text-6xl md:text-8xl font-black uppercase tracking-tighter italic leading-none break-words">
             ASSET <span className="text-fuchsia-studio">ARCHIVE</span>
           </h1>
           <p className="text-zinc-500 text-[10px] uppercase tracking-[0.4em] mt-6 font-bold">
@@ -37,7 +37,7 @@ const Gallery: React.FC<GalleryProps> = ({ currentUser }) => {
         </div>
         <button 
           onClick={() => setIsUploadOpen(true)}
-          className="bg-white text-black px-12 py-5 font-black uppercase tracking-widest text-[10px] hover:bg-fuchsia-studio hover:text-white transition-all shadow-2xl"
+          className="bg-white text-black px-12 py-5 font-black uppercase tracking-widest text-[10px] hover:bg-fuchsia-studio hover:text-white transition-all shadow-2xl w-full md:w-auto"
         >
           Push New Asset +
         </button>

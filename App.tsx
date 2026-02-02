@@ -22,17 +22,17 @@ import Gallery from './pages/Gallery';
 import OpeningSequence from './components/OpeningSequence';
 
 const Footer: React.FC = () => (
-  <footer className="bg-black border-t border-zinc-900 py-24 px-6 mt-24 relative overflow-hidden">
+  <footer className="bg-black border-t border-zinc-900 py-12 md:py-24 px-6 mt-24 relative overflow-hidden">
     <div className="absolute top-0 right-0 p-8 opacity-5">
-      <img src="https://res.cloudinary.com/dkolptikx/image/upload/v1770064247/ss-logo_zt5ylx.png" className="w-64" alt="" />
+      <img src="https://res.cloudinary.com/dkolptikx/image/upload/v1770064247/ss-logo_zt5ylx.png" className="w-32 md:w-64" alt="" />
     </div>
     
-    <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-16 relative z-10">
+    <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-12 md:gap-16 relative z-10">
       <div className="col-span-1 md:col-span-2 space-y-6">
-        <Link to="/" className="inline-block h-12">
+        <Link to="/" className="inline-block h-10 md:h-12">
            <img src="https://res.cloudinary.com/dkolptikx/image/upload/v1770064247/ss-logo_zt5ylx.png" className="h-full w-auto" alt="Studios Stitch" />
         </Link>
-        <p className="text-zinc-500 text-[10px] tracking-[0.3em] max-w-sm uppercase leading-loose">
+        <p className="text-zinc-500 text-[9px] md:text-[10px] tracking-[0.2em] md:tracking-[0.3em] max-w-sm uppercase leading-loose break-words">
           Modular silhouettes constructed for creative disruption. A technical archive for the modern uniform.
         </p>
         <div className="flex gap-4">
@@ -40,16 +40,16 @@ const Footer: React.FC = () => (
         </div>
       </div>
       <div className="space-y-6">
-        <h4 className="text-[10px] uppercase tracking-[0.4em] font-black text-white">Archive</h4>
-        <ul className="text-[10px] space-y-4 uppercase tracking-[0.3em] text-zinc-500 font-bold">
+        <h4 className="text-[9px] md:text-[10px] uppercase tracking-[0.4em] font-black text-white">Archive</h4>
+        <ul className="text-[9px] md:text-[10px] space-y-4 uppercase tracking-[0.3em] text-zinc-500 font-bold">
           <li><Link to="/shop" className="hover:text-fuchsia-studio transition-colors">All Objects</Link></li>
           <li><Link to="/gallery" className="hover:text-fuchsia-studio transition-colors">Asset Gallery</Link></li>
           <li><Link to="/collections" className="hover:text-fuchsia-studio transition-colors">Series 01</Link></li>
         </ul>
       </div>
       <div className="space-y-6">
-        <h4 className="text-[10px] uppercase tracking-[0.4em] font-black text-white">Terminal</h4>
-        <ul className="text-[10px] space-y-4 uppercase tracking-[0.3em] text-zinc-500 font-bold">
+        <h4 className="text-[9px] md:text-[10px] uppercase tracking-[0.4em] font-black text-white">Terminal</h4>
+        <ul className="text-[9px] md:text-[10px] space-y-4 uppercase tracking-[0.3em] text-zinc-500 font-bold">
           <li><a href="https://instagram.com" target="_blank" className="hover:text-fuchsia-studio transition-colors">Instagram</a></li>
           <li><a href="#" className="hover:text-fuchsia-studio transition-colors">Support Portal</a></li>
           <li><Link to="/admin" className="hover:text-fuchsia-studio transition-colors">Admin Access</Link></li>
@@ -57,9 +57,9 @@ const Footer: React.FC = () => (
         </ul>
       </div>
     </div>
-    <div className="max-w-7xl mx-auto mt-24 pt-12 border-t border-zinc-900/50 flex flex-col md:flex-row justify-between items-center gap-6">
-      <p className="text-[9px] text-zinc-700 uppercase tracking-[0.5em]">© 2024 Studios Stitch. Registered Archive: www.studiosstitch.com</p>
-      <div className="flex gap-12 text-[9px] text-zinc-700 uppercase tracking-[0.5em] font-black">
+    <div className="max-w-7xl mx-auto mt-16 md:mt-24 pt-8 md:pt-12 border-t border-zinc-900/50 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+      <p className="text-[8px] md:text-[9px] text-zinc-700 uppercase tracking-[0.3em] md:tracking-[0.5em] leading-relaxed">© 2024 Studios Stitch. Registered Archive: www.studiosstitch.com</p>
+      <div className="flex flex-col md:flex-row gap-4 md:gap-12 text-[8px] md:text-[9px] text-zinc-700 uppercase tracking-[0.3em] md:tracking-[0.5em] font-black">
         <a href="#" className="hover:text-white transition-colors">Privacy</a>
         <a href="#" className="hover:text-white transition-colors">Terms of Trade</a>
       </div>
@@ -121,15 +121,15 @@ const AuthPage: React.FC<{ onAuthSuccess: (user: User) => void }> = ({ onAuthSuc
 
   if (showVerify) {
     return (
-      <div className="max-w-md mx-auto py-48 px-6 text-center animate-in fade-in duration-500">
+      <div className="max-w-md mx-auto py-32 md:py-48 px-6 text-center animate-in fade-in duration-500">
         <div className="mb-12">
           <div className="w-16 h-16 mx-auto border-2 border-fuchsia-studio flex items-center justify-center rounded-full animate-pulse">
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-fuchsia-studio"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
           </div>
         </div>
-        <h2 className="text-4xl font-black uppercase tracking-tighter mb-4 text-white italic">Identity Verification</h2>
-        <p className="text-zinc-500 text-[10px] uppercase tracking-[0.3em] mb-12 leading-loose">
-          We have sent you a verification email to <span className="text-white font-bold">{verificationEmail}</span>.<br/>
+        <h2 className="text-2xl md:text-4xl font-black uppercase tracking-tighter mb-4 text-white italic break-words">Identity Verification</h2>
+        <p className="text-zinc-500 text-[9px] md:text-[10px] uppercase tracking-[0.2em] md:tracking-[0.3em] mb-12 leading-loose break-words">
+          We have sent you a verification email to <span className="text-white font-bold block md:inline">{verificationEmail}</span>.
           Please verify it and log in.
         </p>
 
@@ -148,17 +148,17 @@ const AuthPage: React.FC<{ onAuthSuccess: (user: User) => void }> = ({ onAuthSuc
   }
 
   return (
-    <div className="max-w-md mx-auto py-48 px-6 text-center animate-in fade-in duration-500">
+    <div className="max-w-md mx-auto py-32 md:py-48 px-6 text-center animate-in fade-in duration-500">
       <div className="mb-12 flex justify-center">
-        <img src="https://res.cloudinary.com/dkolptikx/image/upload/v1770064247/ss-logo_zt5ylx.png" className="h-16 w-auto logo-glow" alt="Studios Stitch" />
+        <img src="https://res.cloudinary.com/dkolptikx/image/upload/v1770064247/ss-logo_zt5ylx.png" className="h-12 md:h-16 w-auto logo-glow" alt="Studios Stitch" />
       </div>
-      <h2 className="text-4xl font-black uppercase tracking-tighter mb-4 text-white italic">Security Clearance</h2>
-      <p className="text-zinc-600 text-[10px] uppercase tracking-[0.4em] mb-12">
+      <h2 className="text-2xl md:text-4xl font-black uppercase tracking-tighter mb-4 text-white italic break-words">Security Clearance</h2>
+      <p className="text-zinc-600 text-[9px] md:text-[10px] uppercase tracking-[0.3em] md:tracking-[0.4em] mb-12 break-words">
         {isLogin ? 'Authorized Personnel Only' : 'New Agent Registration'}
       </p>
 
       {error && (
-        <div className="mb-6 bg-red-900/20 border border-red-900/50 p-4 text-[10px] uppercase tracking-widest text-red-500 font-bold">
+        <div className="mb-6 bg-red-900/20 border border-red-900/50 p-4 text-[10px] uppercase tracking-widest text-red-500 font-bold break-words">
           {error}
         </div>
       )}
@@ -168,7 +168,7 @@ const AuthPage: React.FC<{ onAuthSuccess: (user: User) => void }> = ({ onAuthSuc
           type="email" 
           placeholder="USER@STUDIOSSTITCH.COM"
           required
-          className="w-full bg-black border border-zinc-900 p-5 text-[10px] uppercase tracking-[0.3em] font-black focus:outline-none focus:border-fuchsia-studio transition-colors text-white placeholder:text-zinc-800"
+          className="w-full bg-black border border-zinc-900 p-5 text-[10px] uppercase tracking-[0.2em] md:tracking-[0.3em] font-black focus:outline-none focus:border-fuchsia-studio transition-colors text-white placeholder:text-zinc-800"
           value={email}
           onChange={e => setEmail(e.target.value)}
         />
@@ -176,7 +176,7 @@ const AuthPage: React.FC<{ onAuthSuccess: (user: User) => void }> = ({ onAuthSuc
           type="password" 
           placeholder="ACCESS CODE (PASSWORD)"
           required
-          className="w-full bg-black border border-zinc-900 p-5 text-[10px] uppercase tracking-[0.3em] font-black focus:outline-none focus:border-fuchsia-studio transition-colors text-white placeholder:text-zinc-800"
+          className="w-full bg-black border border-zinc-900 p-5 text-[10px] uppercase tracking-[0.2em] md:tracking-[0.3em] font-black focus:outline-none focus:border-fuchsia-studio transition-colors text-white placeholder:text-zinc-800"
           value={password}
           onChange={e => setPassword(e.target.value)}
         />
@@ -196,7 +196,7 @@ const AuthPage: React.FC<{ onAuthSuccess: (user: User) => void }> = ({ onAuthSuc
             setEmail('');
             setPassword('');
           }}
-          className="text-zinc-500 text-[9px] uppercase tracking-[0.3em] hover:text-white transition-colors font-bold"
+          className="text-zinc-500 text-[9px] uppercase tracking-[0.2em] md:tracking-[0.3em] hover:text-white transition-colors font-bold break-words"
         >
           {isLogin ? "Need Security Clearance? Register" : "Already Verified? Sign In"}
         </button>
@@ -206,15 +206,15 @@ const AuthPage: React.FC<{ onAuthSuccess: (user: User) => void }> = ({ onAuthSuc
 };
 
 const CheckoutSuccess: React.FC = () => (
-  <div className="max-w-md mx-auto py-48 px-6 text-center space-y-8">
-    <div className="w-20 h-20 bg-fuchsia-studio/10 text-fuchsia-studio rounded-none border border-fuchsia-studio/30 flex items-center justify-center mx-auto transform rotate-45">
+  <div className="max-w-md mx-auto py-32 md:py-48 px-6 text-center space-y-8">
+    <div className="w-16 h-16 md:w-20 md:h-20 bg-fuchsia-studio/10 text-fuchsia-studio rounded-none border border-fuchsia-studio/30 flex items-center justify-center mx-auto transform rotate-45">
       <svg className="transform -rotate-45" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
     </div>
     <div className="space-y-4">
-      <h2 className="text-5xl font-black uppercase tracking-tighter italic">Transaction Verified</h2>
-      <p className="text-zinc-500 uppercase tracking-[0.3em] text-[10px] font-bold">Deployment of objects initiated. Status: Processing.</p>
+      <h2 className="text-3xl md:text-5xl font-black uppercase tracking-tighter italic break-words">Transaction Verified</h2>
+      <p className="text-zinc-500 uppercase tracking-[0.2em] md:tracking-[0.3em] text-[9px] md:text-[10px] font-bold">Deployment of objects initiated. Status: Processing.</p>
     </div>
-    <Link to="/shop" className="inline-block border border-zinc-800 px-12 py-5 text-[10px] uppercase font-black tracking-[0.4em] hover:bg-white hover:text-black transition-all">
+    <Link to="/shop" className="inline-block border border-zinc-800 px-8 md:px-12 py-4 md:py-5 text-[9px] md:text-[10px] uppercase font-black tracking-[0.3em] md:tracking-[0.4em] hover:bg-white hover:text-black transition-all">
       Return to Terminal
     </Link>
   </div>

@@ -14,20 +14,20 @@ const Home: React.FC<HomeProps> = ({ products, onAddToCart }) => {
     <div className="flex flex-col bg-black">
       {/* Threadless Style Hero Banner */}
       <section className="relative px-6 py-12">
-        <Link to="/shop" className="group block relative aspect-[21/9] md:aspect-[21/6] bg-zinc-900 overflow-hidden rounded-sm border border-zinc-800">
+        <Link to="/shop" className="group block relative aspect-[21/14] md:aspect-[21/6] bg-zinc-900 overflow-hidden rounded-sm border border-zinc-800">
           <div className="absolute inset-0 bg-gradient-to-r from-fuchsia-studio/40 to-black/80 z-10" />
           <img 
             src="https://images.unsplash.com/photo-1521572267360-ee0c2909d518?q=80&w=2000&auto=format&fit=crop" 
             className="w-full h-full object-cover grayscale opacity-50 transition-transform duration-700 group-hover:scale-105" 
             alt="Hero Banner"
           />
-          <div className="absolute inset-0 z-20 flex flex-col justify-center px-12 md:px-24 max-w-4xl">
-            <span className="text-fuchsia-studio font-black uppercase tracking-[0.4em] text-xs mb-4">Limited Edition Release</span>
-            <h1 className="text-5xl md:text-8xl font-black uppercase tracking-tighter leading-none italic mb-8">
+          <div className="absolute inset-0 z-20 flex flex-col justify-center px-8 md:px-24 max-w-4xl">
+            <span className="text-fuchsia-studio font-black uppercase tracking-[0.3em] md:tracking-[0.4em] text-[10px] md:text-xs mb-4">Limited Edition Release</span>
+            <h1 className="text-4xl sm:text-5xl md:text-8xl font-black uppercase tracking-tighter leading-none italic mb-8 break-words">
               THE <span className="text-fuchsia-studio">STITCH</span><br/>ARCHIVE 01.
             </h1>
             <div className="flex gap-4">
-              <span className="bg-white text-black px-10 py-4 font-black uppercase text-[10px] tracking-widest group-hover:bg-fuchsia-studio group-hover:text-white transition-all">Shop All Shirts</span>
+              <span className="bg-white text-black px-8 md:px-10 py-3 md:py-4 font-black uppercase text-[9px] md:text-[10px] tracking-widest group-hover:bg-fuchsia-studio group-hover:text-white transition-all">Shop All Shirts</span>
             </div>
           </div>
         </Link>
@@ -58,10 +58,10 @@ const Home: React.FC<HomeProps> = ({ products, onAddToCart }) => {
       <section className="py-20 px-6 max-w-[1600px] mx-auto w-full">
         <div className="flex justify-between items-end mb-12">
           <div>
-            <h2 className="text-3xl font-black uppercase tracking-tighter italic">New Designer Drops</h2>
+            <h2 className="text-2xl md:text-3xl font-black uppercase tracking-tighter italic">New Designer Drops</h2>
             <div className="h-1 w-20 bg-fuchsia-studio mt-2" />
           </div>
-          <Link to="/shop" className="text-[10px] font-black uppercase tracking-widest text-zinc-500 hover:text-fuchsia-studio">See Everything →</Link>
+          <Link to="/shop" className="text-[9px] md:text-[10px] font-black uppercase tracking-widest text-zinc-500 hover:text-fuchsia-studio">See Everything →</Link>
         </div>
         
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-4 gap-6">
@@ -72,19 +72,19 @@ const Home: React.FC<HomeProps> = ({ products, onAddToCart }) => {
       </section>
 
       {/* Community Section */}
-      <section className="bg-zinc-950 border-y border-zinc-900 py-24 px-6 overflow-hidden">
-        <div className="max-w-[1600px] mx-auto grid grid-cols-1 lg:grid-cols-2 gap-24 items-center">
+      <section className="bg-zinc-950 border-y border-zinc-900 py-12 md:py-24 px-6 overflow-hidden">
+        <div className="max-w-[1600px] mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 md:gap-24 items-center">
           <div className="space-y-8">
-            <h2 className="text-6xl font-black uppercase tracking-tighter leading-none italic">
+            <h2 className="text-4xl md:text-6xl font-black uppercase tracking-tighter leading-none italic break-words">
               BUILT BY <br/>
               <span className="text-fuchsia-studio underline decoration-8 decoration-white underline-offset-8">THE COMMUNITY.</span>
             </h2>
-            <p className="text-zinc-500 text-sm uppercase tracking-widest leading-loose font-bold max-w-md">
+            <p className="text-zinc-500 text-[10px] md:text-sm uppercase tracking-widest leading-loose font-bold max-w-md">
               Studios Stitch is more than a brand. It's a platform for subversive artists and underground designers. Submit your art and join the archive.
             </p>
-            <div className="flex gap-6">
-              <Link to="/gallery" className="bg-white text-black px-12 py-5 font-black uppercase tracking-widest text-[10px] hover:bg-fuchsia-studio hover:text-white transition-all">Submit Your Art</Link>
-              <Link to="/gallery" className="border border-zinc-800 text-white px-12 py-5 font-black uppercase tracking-widest text-[10px] hover:border-white transition-all">View Archive</Link>
+            <div className="flex flex-col sm:flex-row gap-6">
+              <Link to="/gallery" className="bg-white text-black px-12 py-5 font-black uppercase tracking-widest text-[10px] hover:bg-fuchsia-studio hover:text-white transition-all text-center">Submit Your Art</Link>
+              <Link to="/gallery" className="border border-zinc-800 text-white px-12 py-5 font-black uppercase tracking-widest text-[10px] hover:border-white transition-all text-center">View Archive</Link>
             </div>
           </div>
           <div className="grid grid-cols-3 gap-4 rotate-3 opacity-20">
@@ -96,17 +96,17 @@ const Home: React.FC<HomeProps> = ({ products, onAddToCart }) => {
       </section>
 
       {/* Newsletter */}
-      <section className="py-32 px-6 text-center">
+      <section className="py-24 md:py-32 px-6 text-center">
         <div className="max-w-2xl mx-auto space-y-10">
-          <h3 className="text-4xl font-black uppercase tracking-tighter italic">Get the Latest Manifestos</h3>
-          <p className="text-zinc-500 text-[10px] uppercase tracking-[0.4em] font-bold">New drops, artist spotlights, and exclusive access codes.</p>
-          <div className="flex max-w-md mx-auto">
+          <h3 className="text-3xl md:text-4xl font-black uppercase tracking-tighter italic">Get the Latest Manifestos</h3>
+          <p className="text-zinc-500 text-[9px] md:text-[10px] uppercase tracking-[0.3em] font-bold">New drops, artist spotlights, and exclusive access codes.</p>
+          <div className="flex flex-col sm:flex-row max-w-md mx-auto gap-4 sm:gap-0">
             <input 
               type="email" 
               placeholder="YOUR@EMAIL.COM" 
-              className="flex-1 bg-zinc-900 border border-zinc-800 px-6 py-4 text-[10px] font-black uppercase tracking-widest focus:outline-none focus:border-fuchsia-studio"
+              className="flex-1 bg-zinc-900 border border-zinc-800 px-6 py-4 text-[10px] font-black uppercase tracking-widest focus:outline-none focus:border-fuchsia-studio w-full"
             />
-            <button className="bg-fuchsia-studio text-white px-10 py-4 font-black uppercase text-[10px] tracking-widest">Join</button>
+            <button className="bg-fuchsia-studio text-white px-10 py-4 font-black uppercase text-[10px] tracking-widest w-full sm:w-auto">Join</button>
           </div>
         </div>
       </section>

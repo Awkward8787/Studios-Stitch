@@ -61,8 +61,8 @@ const Shop: React.FC<ShopProps> = ({ products: initialProducts, onAddToCart }) =
     <div className="pt-24 px-6 max-w-7xl mx-auto min-h-screen">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 mb-12">
         <div className="border-l-4 border-fuchsia-studio pl-8">
-          <h1 className="text-4xl md:text-6xl font-black uppercase tracking-tighter italic">Archive Manifest</h1>
-          <p className="text-zinc-500 text-[10px] uppercase tracking-[0.4em] mt-2 font-bold">Authenticated Inventory Units // Series 01</p>
+          <h1 className="text-3xl sm:text-4xl md:text-6xl font-black uppercase tracking-tighter italic break-words">Archive Manifest</h1>
+          <p className="text-zinc-500 text-[9px] md:text-[10px] uppercase tracking-[0.3em] md:tracking-[0.4em] mt-2 font-bold">Authenticated Inventory Units // Series 01</p>
         </div>
         <div className="flex flex-wrap gap-3">
           {categories.map(cat => (

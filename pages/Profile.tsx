@@ -189,11 +189,11 @@ const Profile: React.FC<ProfileProps> = ({ user }) => {
   return (
     <div className="pt-32 px-6 max-w-7xl mx-auto min-h-screen">
       {/* Header */}
-      <div className="mb-12 flex flex-col md:flex-row justify-between items-start md:items-end gap-12">
-        <div className="space-y-4">
+      <div className="mb-12 flex flex-col md:flex-row justify-between items-start md:items-end gap-8 md:gap-12">
+        <div className="space-y-4 max-w-full">
            <div className="inline-block bg-fuchsia-studio px-2 py-1 text-[8px] font-black uppercase tracking-[0.4em] text-white mb-2">Security Level: Authorized</div>
-           <h1 className="text-4xl md:text-6xl font-black uppercase tracking-tighter leading-none italic">{user.email.split('@')[0]}</h1>
-           <p className="text-zinc-500 text-xs uppercase tracking-[0.3em] font-black">ID: {user.id}</p>
+           <h1 className="text-3xl sm:text-4xl md:text-6xl font-black uppercase tracking-tighter leading-none italic break-all">{user.email.split('@')[0]}</h1>
+           <p className="text-zinc-500 text-[10px] md:text-xs uppercase tracking-[0.2em] md:tracking-[0.3em] font-black break-all">ID: {user.id}</p>
         </div>
       </div>
 
@@ -233,17 +233,17 @@ const Profile: React.FC<ProfileProps> = ({ user }) => {
                     <div className="flex items-center gap-6 w-full md:w-auto">
                       <div className="flex -space-x-4">
                         {order.items.slice(0, 3).map((item, i) => (
-                          <div key={i} className="w-12 h-16 bg-black border border-zinc-800 overflow-hidden">
+                          <div key={i} className="w-12 h-16 bg-black border border-zinc-800 overflow-hidden flex-shrink-0">
                              <img src={item.thumbnail_url} className="w-full h-full object-cover opacity-80" />
                           </div>
                         ))}
                       </div>
-                      <div>
-                        <p className="text-[10px] font-black text-white uppercase tracking-widest">#{order.orderNumber || order.id.slice(0,8)}</p>
+                      <div className="min-w-0">
+                        <p className="text-[10px] font-black text-white uppercase tracking-widest break-all">#{order.orderNumber || order.id.slice(0,8)}</p>
                         <p className="text-[9px] font-bold text-zinc-500 uppercase mt-1">Placed: {new Date(order.createdAt?.seconds * 1000 || order.createdAt).toLocaleDateString()}</p>
                       </div>
                     </div>
-                    <div className="flex items-center gap-8 w-full md:w-auto justify-between md:justify-end">
+                    <div className="flex items-center gap-4 md:gap-8 w-full md:w-auto justify-between md:justify-end">
                        <span className={`px-3 py-1 text-[8px] font-black uppercase border ${
                           order.status === 'paid' || order.status === 'delivered' ? 'border-green-900 text-green-500' : 'border-zinc-800 text-zinc-500'
                        }`}>
@@ -321,8 +321,8 @@ const Profile: React.FC<ProfileProps> = ({ user }) => {
                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     {collections.map(col => (
                        <div key={col.id} onClick={() => setViewingCollectionId(col.id)} className="bg-zinc-900/20 border border-zinc-800 p-8 cursor-pointer hover:border-fuchsia-studio hover:bg-zinc-900/40 transition-all group stitch-corner">
-                          <h3 className="text-xl font-black uppercase italic text-white group-hover:text-fuchsia-studio transition-colors">{col.name}</h3>
-                          <p className="text-[10px] text-zinc-500 uppercase tracking-widest mt-2">{col.description || 'No description'}</p>
+                          <h3 className="text-xl font-black uppercase italic text-white group-hover:text-fuchsia-studio transition-colors break-words">{col.name}</h3>
+                          <p className="text-[10px] text-zinc-500 uppercase tracking-widest mt-2 break-words">{col.description || 'No description'}</p>
                           <div className="mt-8 pt-4 border-t border-zinc-800 flex justify-between items-center">
                              <span className="text-[8px] font-bold text-zinc-600 uppercase">Open Folder →</span>
                              <button 
@@ -383,8 +383,8 @@ const Profile: React.FC<ProfileProps> = ({ user }) => {
                    Upload File +
                  </button>
               </div>
-              <div className="bg-zinc-900/20 border border-zinc-800 overflow-hidden">
-                 <table className="w-full text-left">
+              <div className="bg-zinc-900/20 border border-zinc-800 overflow-x-auto">
+                 <table className="w-full text-left min-w-[600px]">
                     <thead className="bg-zinc-900 text-[8px] uppercase font-black tracking-widest text-zinc-500">
                        <tr>
                           <th className="p-4">Filename</th>
@@ -424,8 +424,8 @@ const Profile: React.FC<ProfileProps> = ({ user }) => {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                  {notes.map(note => (
                     <div key={note.id} className="bg-zinc-900/30 border border-zinc-800 p-6 stitch-corner group">
-                       <h3 className="text-sm font-black uppercase text-white mb-2">{note.title}</h3>
-                       <p className="text-[10px] text-zinc-400 font-mono whitespace-pre-wrap">{note.content}</p>
+                       <h3 className="text-sm font-black uppercase text-white mb-2 break-words">{note.title}</h3>
+                       <p className="text-[10px] text-zinc-400 font-mono whitespace-pre-wrap break-words">{note.content}</p>
                        <button 
                          onClick={() => confirmAction('Delete Note', 'Delete this field note?', async () => firebaseService.deleteNote(user.id, note.id))}
                          className="mt-6 text-[8px] font-black uppercase tracking-widest text-zinc-600 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
@@ -451,8 +451,8 @@ const Profile: React.FC<ProfileProps> = ({ user }) => {
                  {teamMembers.map(member => (
                     <div key={member.id} className="p-4 flex justify-between items-center hover:bg-zinc-900/30 transition-colors">
                        <div>
-                          <p className="text-sm font-black uppercase text-white">{member.name}</p>
-                          <p className="text-[9px] font-bold text-fuchsia-studio uppercase tracking-widest">{member.role}</p>
+                          <p className="text-sm font-black uppercase text-white break-words">{member.name}</p>
+                          <p className="text-[9px] font-bold text-fuchsia-studio uppercase tracking-widest break-words">{member.role}</p>
                        </div>
                        <button onClick={() => confirmAction('Remove Member', 'Remove this operative from the unit?', async () => firebaseService.deleteTeamMember(user.id, member.id))} className="text-[8px] font-black uppercase tracking-widest text-zinc-600 hover:text-red-500">
                           Discharge
@@ -479,8 +479,8 @@ const Profile: React.FC<ProfileProps> = ({ user }) => {
                           <span className="text-[9px] font-black uppercase tracking-widest text-zinc-500">{addr.label}</span>
                           {addr.isDefault && <span className="text-[8px] font-black uppercase bg-fuchsia-studio text-white px-2 py-1">Default</span>}
                        </div>
-                       <p className="font-bold text-white uppercase text-sm">{addr.fullName}</p>
-                       <p className="text-[10px] text-zinc-400 uppercase mt-2 leading-relaxed">
+                       <p className="font-bold text-white uppercase text-sm break-words">{addr.fullName}</p>
+                       <p className="text-[10px] text-zinc-400 uppercase mt-2 leading-relaxed break-words">
                           {addr.line1}<br/>
                           {addr.line2 && <>{addr.line2}<br/></>}
                           {addr.city}, {addr.state} {addr.postalCode}<br/>
@@ -535,8 +535,8 @@ const Profile: React.FC<ProfileProps> = ({ user }) => {
                   onClick={() => handleAddToCollection(col.id)}
                   className="w-full text-left bg-zinc-900 border border-zinc-800 p-4 hover:border-fuchsia-studio hover:bg-zinc-800 transition-all flex justify-between items-center"
                >
-                  <span className="text-[10px] font-black uppercase text-white">{col.name}</span>
-                  <span className="text-[8px] text-zinc-500 uppercase tracking-widest">Select →</span>
+                  <span className="text-[10px] font-black uppercase text-white truncate mr-2">{col.name}</span>
+                  <span className="text-[8px] text-zinc-500 uppercase tracking-widest flex-shrink-0">Select →</span>
                </button>
             ))}
             {collections.length === 0 && <p className="text-[10px] text-red-500 uppercase font-bold">No collections found. Create one first.</p>}
