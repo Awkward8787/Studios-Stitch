@@ -33,9 +33,7 @@ const Navbar: React.FC<NavbarProps> = ({ cartCount, onCartToggle, userEmail, onL
         <div className="max-w-[1600px] mx-auto flex justify-between items-center">
           <div className="flex items-center gap-10">
             <Link to="/" className="group block">
-              <div className="text-2xl font-black uppercase tracking-tighter italic logo-glow">
-                STITCH<span className="text-fuchsia-studio">.</span>
-              </div>
+              <img src="https://res.cloudinary.com/dkolptikx/image/upload/v1770064247/ss-logo_zt5ylx.png" className="h-10 w-auto logo-glow" alt="Studios Stitch" />
             </Link>
             
             <nav className="hidden lg:flex gap-8 text-[10px] font-black tracking-[0.2em] uppercase text-zinc-400">

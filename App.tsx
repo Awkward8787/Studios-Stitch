@@ -24,13 +24,13 @@ import OpeningSequence from './components/OpeningSequence';
 const Footer: React.FC = () => (
   <footer className="bg-black border-t border-zinc-900 py-24 px-6 mt-24 relative overflow-hidden">
     <div className="absolute top-0 right-0 p-8 opacity-5">
-      <img src="logo.png" className="w-64 grayscale invert" alt="" />
+      <img src="https://res.cloudinary.com/dkolptikx/image/upload/v1770064247/ss-logo_zt5ylx.png" className="w-64" alt="" />
     </div>
     
     <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-16 relative z-10">
       <div className="col-span-1 md:col-span-2 space-y-6">
-        <Link to="/" className="inline-block h-8 h-8">
-           <img src="logo.png" className="h-full w-auto grayscale invert" alt="Studios Stitch" />
+        <Link to="/" className="inline-block h-12">
+           <img src="https://res.cloudinary.com/dkolptikx/image/upload/v1770064247/ss-logo_zt5ylx.png" className="h-full w-auto" alt="Studios Stitch" />
         </Link>
         <p className="text-zinc-500 text-[10px] tracking-[0.3em] max-w-sm uppercase leading-loose">
           Modular silhouettes constructed for creative disruption. A technical archive for the modern uniform.

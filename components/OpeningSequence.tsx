@@ -64,8 +64,8 @@ const OpeningSequence: React.FC<OpeningSequenceProps> = ({ onComplete }) => {
           <div className={`transition-all duration-1000 flex flex-col items-center ${phase === 1 ? 'opacity-0 scale-95 blur-xl' : 'opacity-100 scale-100 blur-0'}`}>
             <div className="mb-12 logo-glow">
               <img 
-                src="logo.png" 
-                className="w-64 h-auto mx-auto grayscale invert animate-pulse" 
+                src="https://res.cloudinary.com/dkolptikx/image/upload/v1770064247/ss-logo_zt5ylx.png" 
+                className="w-64 h-auto mx-auto animate-pulse" 
                 alt="Studios Stitch"
                 onError={(e) => {
                   (e.target as HTMLImageElement).style.display = 'none';
