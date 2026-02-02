@@ -1,192 +1,162 @@
 
-import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { User, Order, Review, WishlistItem, CommunityAsset } from '../types';
-import { configService } from './configService';
+
+// Mock data helpers for LocalStorage Persistence
+const STORAGE_KEYS = {
+  REVIEWS: 'stitch_reviews',
+  WISHLIST: 'stitch_wishlist',
+  ASSETS: 'stitch_assets',
+  ORDERS: 'stitch_orders'
+};
+
+const getStorage = (key: string) => {
+  try {
+    return JSON.parse(localStorage.getItem(key) || '[]');
+  } catch { return []; }
+};
+
+const setStorage = (key: string, data: any) => {
+  localStorage.setItem(key, JSON.stringify(data));
+};
+
+// Initial Demo Assets
+const DEMO_ASSETS: CommunityAsset[] = [
+  {
+    id: 'demo_asset_1',
+    title: 'Neon Tokyo Drift',
+    image_url: 'https://images.unsplash.com/photo-1550684848-fac1c5b4e853?q=80&w=1000&auto=format&fit=crop',
+    artist_name: 'Ghost_Protocol',
+    description: 'Captured in Shinjuku.',
+    status: 'approved',
+    created_at: new Date().toISOString()
+  },
+  {
+    id: 'demo_asset_2',
+    title: 'Cyber Deck V2',
+    image_url: 'https://images.unsplash.com/photo-1592496001020-d31bd830651f?q=80&w=1000&auto=format&fit=crop',
+    artist_name: 'Null_Pointer',
+    description: 'Custom hardware aesthetics.',
+    status: 'approved',
+    created_at: new Date().toISOString()
+  }
+];
 
 class SupabaseService {
-  private client: SupabaseClient | null = null;
-
-  private getClient(): SupabaseClient {
-    if (this.client) return this.client;
-    const { supabaseUrl, supabaseAnonKey } = configService.getConfig();
-    if (!supabaseUrl || !supabaseAnonKey) throw new Error("SUPABASE_NOT_CONFIGURED");
-    this.client = createClient(supabaseUrl, supabaseAnonKey);
-    return this.client;
-  }
+  // This service now bridges the gap between Firebase Auth and local data persistence
+  // allowing the app to run seamlessly without complex backend configuration.
 
   async getCurrentUser(): Promise<User | null> {
-    try {
-      const supabase = this.getClient();
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return null;
-      
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('id', user.id)
-        .single();
-
-      return {
-        id: user.id,
-        email: user.email || '',
-        role: (profile?.role as any) || 'user'
-      };
-    } catch {
-      return null;
-    }
+    // Auth is managed by Firebase in this configuration
+    return null;
   }
 
   async signIn(email: string): Promise<void> {
-    const supabase = this.getClient();
-    const { error } = await supabase.auth.signInWithOtp({
-      email,
-      options: { emailRedirectTo: window.location.origin },
-    });
-    if (error) throw error;
+    // Auth is managed by Firebase
   }
 
   async signOut() {
-    if (!this.client) return;
-    await this.client.auth.signOut();
+    // Auth is managed by Firebase
   }
 
   // --- ASSETS ---
   async getAssets(onlyApproved = true): Promise<CommunityAsset[]> {
-    try {
-      const supabase = this.getClient();
-      let query = supabase.from('community_assets').select('*').order('created_at', { ascending: false });
-      if (onlyApproved) query = query.eq('status', 'approved');
-      const { data, error } = await query;
-      if (error) throw error;
-      return data as CommunityAsset[];
-    } catch {
-      return [];
+    let assets = getStorage(STORAGE_KEYS.ASSETS);
+    
+    // Merge with demo assets if empty
+    if (assets.length === 0) {
+      assets = DEMO_ASSETS;
+      setStorage(STORAGE_KEYS.ASSETS, assets);
     }
+
+    if (onlyApproved) return assets.filter((a: any) => a.status === 'approved');
+    return assets;
   }
 
   async addAsset(asset: Omit<CommunityAsset, 'id' | 'created_at' | 'status'>): Promise<CommunityAsset> {
-    const supabase = this.getClient();
-    const { data, error } = await supabase
-      .from('community_assets')
-      .insert([{ ...asset, status: 'approved' }]) // Defaulting to approved for now
-      .select()
-      .single();
-    if (error) throw error;
-    return data as CommunityAsset;
+    const assets = getStorage(STORAGE_KEYS.ASSETS);
+    const newAsset = {
+      ...asset,
+      id: crypto.randomUUID(),
+      created_at: new Date().toISOString(),
+      status: 'approved' // Auto-approve for seamless demo experience
+    };
+    assets.unshift(newAsset);
+    setStorage(STORAGE_KEYS.ASSETS, assets);
+    return newAsset as CommunityAsset;
   }
 
   async deleteAsset(id: string) {
-    const supabase = this.getClient();
-    await supabase.from('community_assets').delete().eq('id', id);
+    let assets = getStorage(STORAGE_KEYS.ASSETS);
+    assets = assets.filter((a: any) => a.id !== id);
+    setStorage(STORAGE_KEYS.ASSETS, assets);
   }
 
   // --- REVIEWS ---
   async getReviews(productId: string): Promise<Review[]> {
-    try {
-      const supabase = this.getClient();
-      const { data, error } = await supabase
-        .from('reviews')
-        .select('*')
-        .eq('product_id', productId)
-        .order('created_at', { ascending: false });
-      if (error) throw error;
-      return data as Review[];
-    } catch {
-      return [];
-    }
+    const allReviews = getStorage(STORAGE_KEYS.REVIEWS);
+    return allReviews.filter((r: any) => r.product_id === productId);
   }
 
   async addReview(review: Omit<Review, 'id' | 'created_at'>): Promise<Review> {
-    const supabase = this.getClient();
-    const { data, error } = await supabase
-      .from('reviews')
-      .insert([review])
-      .select()
-      .single();
-    if (error) throw error;
-    return data as Review;
+    const reviews = getStorage(STORAGE_KEYS.REVIEWS);
+    const newReview = {
+      ...review,
+      id: crypto.randomUUID(),
+      created_at: new Date().toISOString()
+    };
+    reviews.unshift(newReview);
+    setStorage(STORAGE_KEYS.REVIEWS, reviews);
+    return newReview as Review;
   }
 
   // --- WISHLIST ---
   async getWishlist(userId: string): Promise<WishlistItem[]> {
-    try {
-      const supabase = this.getClient();
-      const { data, error } = await supabase
-        .from('wishlist')
-        .select('*')
-        .eq('user_id', userId);
-      if (error) throw error;
-      return data as WishlistItem[];
-    } catch {
-      return [];
-    }
+    const wishlist = getStorage(STORAGE_KEYS.WISHLIST);
+    return wishlist.filter((w: any) => w.user_id === userId);
   }
 
   async toggleWishlist(userId: string, productId: string): Promise<boolean> {
-    const supabase = this.getClient();
-    const { data: existing } = await supabase
-      .from('wishlist')
-      .select('id')
-      .eq('user_id', userId)
-      .eq('product_id', productId)
-      .single();
-
-    if (existing) {
-      await supabase.from('wishlist').delete().eq('id', existing.id);
+    const wishlist = getStorage(STORAGE_KEYS.WISHLIST);
+    const index = wishlist.findIndex((w: any) => w.user_id === userId && w.product_id === productId);
+    
+    if (index >= 0) {
+      wishlist.splice(index, 1);
+      setStorage(STORAGE_KEYS.WISHLIST, wishlist);
       return false;
     } else {
-      await supabase.from('wishlist').insert([{ user_id: userId, product_id: productId }]);
+      wishlist.push({
+        id: crypto.randomUUID(),
+        user_id: userId,
+        product_id: productId,
+        created_at: new Date().toISOString()
+      });
+      setStorage(STORAGE_KEYS.WISHLIST, wishlist);
       return true;
     }
   }
 
   // --- ORDERS ---
   async getOrders(): Promise<Order[]> {
-    try {
-      const supabase = this.getClient();
-      const { data, error } = await supabase
-        .from('orders')
-        .select('*')
-        .order('created_at', { ascending: false });
-      if (error) throw error;
-      return data as Order[];
-    } catch {
-      return [];
-    }
+    return getStorage(STORAGE_KEYS.ORDERS);
   }
 
   async getUserOrders(userId: string): Promise<Order[]> {
-    try {
-      const supabase = this.getClient();
-      const { data, error } = await supabase
-        .from('orders')
-        .select('*')
-        .eq('user_id', userId)
-        .order('created_at', { ascending: false });
-      if (error) throw error;
-      return data as Order[];
-    } catch {
-      return [];
-    }
+    const orders = getStorage(STORAGE_KEYS.ORDERS);
+    return orders.filter((o: any) => o.user_id === userId);
   }
 
   async updateOrderStatus(id: string, status: Order['status']): Promise<void> {
-    const supabase = this.getClient();
-    const { error } = await supabase
-      .from('orders')
-      .update({ status })
-      .eq('id', id);
-    if (error) throw error;
+    const orders = getStorage(STORAGE_KEYS.ORDERS);
+    const order = orders.find((o: any) => o.id === id);
+    if (order) {
+      order.status = status;
+      setStorage(STORAGE_KEYS.ORDERS, orders);
+    }
   }
 
   async testConnection(): Promise<boolean> {
-    try {
-      const supabase = this.getClient();
-      const { status } = await supabase.from('profiles').select('id').limit(1);
-      return status !== 401;
-    } catch {
-      return false;
-    }
+    // Local persistence is always online
+    return true; 
   }
 }
 

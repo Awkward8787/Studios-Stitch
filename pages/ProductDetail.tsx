@@ -98,12 +98,11 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ productId, onAddToCart, c
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-20 items-start">
         {/* Gallery */}
         <div className="space-y-6">
-          <div className="aspect-[3/4] bg-white stitch-corner p-2 overflow-hidden shadow-2xl perspective-1000">
-            <div className="w-full h-full bg-black overflow-hidden relative group preserve-3d">
-               <div className="w-full h-full flex items-center justify-center transform transition-all duration-700 animate-[bounce_5s_infinite_ease-in-out] group-hover:ghost-spin-active">
-                 <img src={mainImage} loading="eager" className="w-full h-full object-contain grayscale group-hover:grayscale-0 group-hover:scale-110" alt={product.name} />
+          <div className="aspect-[3/4] bg-white stitch-corner p-2 overflow-hidden shadow-2xl">
+            <div className="w-full h-full bg-black overflow-hidden relative group">
+               <div className="w-full h-full flex items-center justify-center">
+                 <img src={mainImage} loading="eager" className="w-full h-full object-contain grayscale group-hover:grayscale-0 group-hover:scale-110 transition-all duration-700" alt={product.name} />
               </div>
-              <div className="absolute top-4 right-4 bg-fuchsia-studio text-white text-[8px] font-black px-2 py-1 tracking-widest uppercase">3D GHOST MOCKUP</div>
             </div>
           </div>
           

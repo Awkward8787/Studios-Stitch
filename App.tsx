@@ -5,7 +5,8 @@ import { Product, CartItem, User } from './types';
 import { printfulService } from './services/printfulService';
 import { stripeService } from './services/stripeService';
 import { supabaseService } from './services/supabaseService';
-import { configService } from './services/configService';
+import { firebaseService, auth } from './services/firebaseService';
+import { onAuthStateChanged } from 'firebase/auth';
 
 // Components
 import Navbar from './components/Navbar';
@@ -67,37 +68,102 @@ const Footer: React.FC = () => (
 );
 
 const AuthPage: React.FC<{ onAuthSuccess: (user: User) => void }> = ({ onAuthSuccess }) => {
+  const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  
+  // Verification State
+  const [showVerify, setShowVerify] = useState(false);
+  const [verificationEmail, setVerificationEmail] = useState('');
+
   const navigate = useNavigate();
   
-  const handleSignIn = async (e: React.FormEvent) => {
+  const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    setError('');
+
     try {
-      if (configService.isConfigured()) {
-        await supabaseService.signIn(email);
-        alert("SECURITY_LINK_DISPATCHED: Check your inbox for identity verification.");
+      let firebaseUser;
+      if (isLogin) {
+        firebaseUser = await firebaseService.signIn(email, password);
+        // If successful (and verified), mapUser is called below.
       } else {
-        const user = await supabaseService.getCurrentUser() || { id: 'dev', email, role: 'user' };
-        onAuthSuccess(user as User);
-        navigate('/');
+        // Sign Up
+        firebaseUser = await firebaseService.signUp(email, password);
+        // If successful, show verification screen
+        setVerificationEmail(email);
+        setShowVerify(true);
+        setLoading(false);
+        return; // Stop here, do not navigate
+      }
+
+      if (firebaseUser) {
+        const user = firebaseService.mapUser(firebaseUser);
+        if (user) {
+          onAuthSuccess(user);
+          navigate('/');
+        }
       }
     } catch (err: any) {
-      alert(err.message || "Auth Error");
+      if (err.message === 'EMAIL_NOT_VERIFIED') {
+        setVerificationEmail(email);
+        setShowVerify(true);
+      } else {
+        setError(err.message || "Authentication Failed");
+      }
     } finally {
       setLoading(false);
     }
   };
 
+  if (showVerify) {
+    return (
+      <div className="max-w-md mx-auto py-48 px-6 text-center animate-in fade-in duration-500">
+        <div className="mb-12">
+          <div className="w-16 h-16 mx-auto border-2 border-fuchsia-studio flex items-center justify-center rounded-full animate-pulse">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-fuchsia-studio"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+          </div>
+        </div>
+        <h2 className="text-4xl font-black uppercase tracking-tighter mb-4 text-white italic">Identity Verification</h2>
+        <p className="text-zinc-500 text-[10px] uppercase tracking-[0.3em] mb-12 leading-loose">
+          We have sent you a verification email to <span className="text-white font-bold">{verificationEmail}</span>.<br/>
+          Please verify it and log in.
+        </p>
+
+        <button 
+          onClick={() => {
+            setShowVerify(false);
+            setIsLogin(true);
+            setError('');
+          }}
+          className="w-full bg-white text-black py-5 font-black uppercase tracking-[0.4em] text-[10px] hover:bg-fuchsia-studio hover:text-white transition-all duration-300"
+        >
+          Return to Login
+        </button>
+      </div>
+    );
+  }
+
   return (
-    <div className="max-w-md mx-auto py-48 px-6 text-center">
+    <div className="max-w-md mx-auto py-48 px-6 text-center animate-in fade-in duration-500">
       <div className="mb-12">
         <span className="text-fuchsia-studio font-black text-2xl italic">× × ×</span>
       </div>
       <h2 className="text-4xl font-black uppercase tracking-tighter mb-4 text-white italic">Security Clearance</h2>
-      <p className="text-zinc-600 text-[10px] uppercase tracking-[0.4em] mb-12">Authorized Personnel Only // Bridge Identity Verification</p>
-      <form onSubmit={handleSignIn} className="space-y-4">
+      <p className="text-zinc-600 text-[10px] uppercase tracking-[0.4em] mb-12">
+        {isLogin ? 'Authorized Personnel Only' : 'New Agent Registration'}
+      </p>
+
+      {error && (
+        <div className="mb-6 bg-red-900/20 border border-red-900/50 p-4 text-[10px] uppercase tracking-widest text-red-500 font-bold">
+          {error}
+        </div>
+      )}
+
+      <form onSubmit={handleAuth} className="space-y-4">
         <input 
           type="email" 
           placeholder="USER@STUDIOSSTITCH.COM"
@@ -106,13 +172,35 @@ const AuthPage: React.FC<{ onAuthSuccess: (user: User) => void }> = ({ onAuthSuc
           value={email}
           onChange={e => setEmail(e.target.value)}
         />
+        <input 
+          type="password" 
+          placeholder="ACCESS CODE (PASSWORD)"
+          required
+          className="w-full bg-black border border-zinc-900 p-5 text-[10px] uppercase tracking-[0.3em] font-black focus:outline-none focus:border-fuchsia-studio transition-colors text-white placeholder:text-zinc-800"
+          value={password}
+          onChange={e => setPassword(e.target.value)}
+        />
         <button 
           disabled={loading}
           className="w-full bg-white text-black py-5 font-black uppercase tracking-[0.4em] text-[10px] hover:bg-fuchsia-studio hover:text-white transition-all duration-300 disabled:opacity-50"
         >
-          {loading ? 'PROCESSING...' : 'REQUEST ACCESS'}
+          {loading ? 'PROCESSING...' : (isLogin ? 'REQUEST ACCESS' : 'INITIALIZE ID')}
         </button>
       </form>
+
+      <div className="mt-8 pt-8 border-t border-zinc-900">
+        <button 
+          onClick={() => {
+            setIsLogin(!isLogin);
+            setError('');
+            setEmail('');
+            setPassword('');
+          }}
+          className="text-zinc-500 text-[9px] uppercase tracking-[0.3em] hover:text-white transition-colors font-bold"
+        >
+          {isLogin ? "Need Security Clearance? Register" : "Already Verified? Sign In"}
+        </button>
+      </div>
     </div>
   );
 };
@@ -149,22 +237,23 @@ const AppContent: React.FC = () => {
 
   useEffect(() => {
     const loadData = async () => {
-      // Independent loaders to prevent one service failure from crashing app
       try {
         const fetchedProducts = await printfulService.fetchProducts();
         setProducts(fetchedProducts);
       } catch (err) {
         console.warn("Product sync failed, continuing...", err);
       }
-
-      try {
-        const currentUser = await supabaseService.getCurrentUser();
-        setUser(currentUser);
-      } catch (err) {
-        console.warn("Auth sync failed, continuing...", err);
-      }
     };
     loadData();
+
+    // Firebase Auth Listener
+    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+      // mapUser now returns null if email is not verified
+      const mappedUser = firebaseService.mapUser(firebaseUser);
+      setUser(mappedUser);
+    });
+
+    return () => unsubscribe();
   }, []);
 
   const handleAddToCart = (product: Product, size: string) => {
@@ -205,9 +294,9 @@ const AppContent: React.FC = () => {
   };
 
   const handleLogout = async () => {
-    await supabaseService.signOut();
+    await firebaseService.logout();
     setUser(null);
-    navigate('/');
+    navigate('/auth'); // Redirect to auth page after logout
   };
 
   if (showIntro) {
