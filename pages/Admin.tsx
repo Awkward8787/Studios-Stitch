@@ -22,7 +22,7 @@ const Admin: React.FC = () => {
         printfulService.fetchProducts(),
         supabaseService.getAssets(false)
       ]);
-      setOrders(orderData.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()));
+      setOrders(orderData.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
       setInventory(productData);
       setAssets(assetData);
     } catch (err) {

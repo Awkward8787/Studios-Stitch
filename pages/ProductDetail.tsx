@@ -40,7 +40,7 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ productId, onAddToCart, c
 
       if (currentUser) {
         const wishlist = await supabaseService.getWishlist(currentUser.id);
-        setIsWishlisted(wishlist.some(item => item.product_id === productId));
+        setIsWishlisted(wishlist.some(item => item.productId === productId));
       }
       
       setLoading(false);

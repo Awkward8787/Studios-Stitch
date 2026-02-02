@@ -48,20 +48,21 @@ export interface Review {
 
 export interface WishlistItem {
   id: string;
-  user_id: string;
-  product_id: string;
-  created_at: string;
+  productId: string;
+  variantId?: string;
+  addedAt: any;
+  productSnapshot?: Partial<Product>;
 }
 
 export interface Order {
   id: string;
-  created_at: string;
-  customer_email: string;
-  items: CartItem[];
+  orderNumber: string;
+  status: 'paid' | 'processing' | 'shipped' | 'delivered' | 'refunded' | 'canceled' | 'completed' | 'pending';
   total: number;
-  status: 'pending' | 'completed' | 'shipped';
-  stripe_session_id?: string;
-  printful_order_id?: string;
+  currency: string;
+  createdAt: any;
+  items: CartItem[];
+  customer_email: string; // kept for compatibility
 }
 
 export interface User {
@@ -71,17 +72,40 @@ export interface User {
 }
 
 // --- DASHBOARD TYPES ---
-export interface Folder {
+export interface Address {
   id: string;
-  name: string;
+  label: string;
+  fullName: string;
+  line1: string;
+  line2?: string;
+  city: string;
+  state: string;
+  postalCode: string;
+  country: string;
+  isDefault: boolean;
   createdAt: any;
 }
 
-export interface FileDoc {
+export interface Collection {
   id: string;
   name: string;
-  folderId?: string;
-  size: string;
+  description?: string;
+  createdAt: any;
+}
+
+export interface CollectionItem {
+  id: string;
+  productId: string;
+  addedAt: any;
+  productSnapshot?: Partial<Product>;
+}
+
+export interface Download {
+  id: string;
+  type: 'receipt' | 'mockup' | 'design_export' | 'other';
+  title: string;
+  downloadURL?: string;
+  size?: string;
   createdAt: any;
 }
 

@@ -117,7 +117,8 @@ class SupabaseService {
 
   async toggleWishlist(userId: string, productId: string): Promise<boolean> {
     const wishlist = getStorage(STORAGE_KEYS.WISHLIST);
-    const index = wishlist.findIndex((w: any) => w.user_id === userId && w.product_id === productId);
+    // Use productId to match WishlistItem interface
+    const index = wishlist.findIndex((w: any) => w.user_id === userId && w.productId === productId);
     
     if (index >= 0) {
       wishlist.splice(index, 1);
@@ -127,8 +128,8 @@ class SupabaseService {
       wishlist.push({
         id: crypto.randomUUID(),
         user_id: userId,
-        product_id: productId,
-        created_at: new Date().toISOString()
+        productId: productId,
+        addedAt: new Date().toISOString()
       });
       setStorage(STORAGE_KEYS.WISHLIST, wishlist);
       return true;
