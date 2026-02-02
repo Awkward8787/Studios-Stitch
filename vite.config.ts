@@ -9,7 +9,7 @@ export default defineConfig(({ mode }) => {
   
   return {
     plugins: [react()],
-    base: './', // Use relative paths for better production compatibility
+    base: '/', // Changed from './' to '/' for standard production routing
     define: {
       'process.env.API_KEY': JSON.stringify(apiKey)
     },
