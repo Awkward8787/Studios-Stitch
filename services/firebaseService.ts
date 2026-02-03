@@ -41,7 +41,7 @@ export const db = getFirestore(app);
 
 export const firebaseService = {
   // --- AUTH ---
-  signIn: async (email, password) => {
+  signIn: async (email: string, password: string) => {
     try {
       const result = await signInWithEmailAndPassword(auth, email, password);
       if (!result.user.emailVerified) {
@@ -58,7 +58,7 @@ export const firebaseService = {
     }
   },
 
-  signUp: async (email, password) => {
+  signUp: async (email: string, password: string) => {
     try {
       const result = await createUserWithEmailAndPassword(auth, email, password);
       await sendEmailVerification(result.user);
