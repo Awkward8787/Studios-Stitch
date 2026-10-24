@@ -1,18 +1,13 @@
 
-import { defineConfig, loadEnv } from 'vite';
+import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 
 // https://vitejs.dev/config/
-export default defineConfig(({ mode }) => {
-  const env = loadEnv(mode, '.', '');
-  const apiKey = env.API_KEY || env.VITE_GOOGLE_API_KEY || env.GOOGLE_API_KEY || "";
-  
+// API keys stay in the server environment. Do not inline them into the client bundle.
+export default defineConfig(() => {
   return {
     plugins: [react()],
     base: '/', // Changed from './' to '/' for standard production routing
-    define: {
-      'process.env.API_KEY': JSON.stringify(apiKey)
-    },
     build: {
       outDir: 'dist',
       sourcemap: false,

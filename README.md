@@ -11,7 +11,7 @@
 ![React](https://img.shields.io/badge/React-61DAFB&logo=react&logoColor=white)
 ![Stripe](https://img.shields.io/badge/Stripe-635BFF&logo=stripe&logoColor=white)
 
-Vite/React storefront (shop, collections, product detail, gallery, studio lab, admin, profile). Logo referenced from Cloudinary in the app. A committed `.env` was found in this public repo — rotate those credentials; values are not documented here.
+Vite/React storefront (shop, collections, product detail, gallery, studio lab, admin, profile). Logo referenced from Cloudinary in the app. Credentials were removed from the branch tip. They remain in git history until that history is purged. Rotate them.
 
 ## Features
 
@@ -35,21 +35,29 @@ npm run build
 npm start   # node server.js
 ```
 
-Use env var **names** only (`API_KEY`, `PRINTFUL_TOKEN`, `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`). Do not commit values.
+Copy `.env.example` to `.env` and fill in values locally. Never commit `.env`.
 
 ## Environment variables
 
-Names only. Never commit values.
+Names only. Never commit values. See `.env.example`.
 
 - `API_KEY`
+- `GOOGLE_API_KEY`
+- `GEMINI_API_KEY`
+- `VITE_GOOGLE_API_KEY`
+- `VITE_GEMINI_API_KEY`
 - `PRINTFUL_TOKEN`
 - `STRIPE_SECRET_KEY`
 - `STRIPE_WEBHOOK_SECRET`
-- `GEMINI_API_KEY`
+- `VITE_SUPABASE_URL`
+- `VITE_SUPABASE_ANON_KEY`
+- `VITE_STRIPE_PUBLISHABLE_KEY`
+- `VITE_PRINTFUL_API_KEY`
+- `VITE_FIREBASE_API_KEY`
 
 ## Status
 
-Public. Early shop scaffold. **Security: rotate secrets that were committed in `.env`.**
+Public. Early shop scaffold. **Security: rotate secrets that were committed in `.env` and in service source. Git history still contains them.**
 
 ## License
 

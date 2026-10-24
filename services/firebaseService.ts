@@ -25,7 +25,7 @@ import {
 import { User, Download, Note, TeamMember, Address, Collection, CollectionItem, WishlistItem, Order } from '../types';
 
 const firebaseConfig = {
-  apiKey: "AIzaSyCy6hNqq3_fbVC1xJYv52kFhqbCP5jNElg",
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "",
   authDomain: "studios-stitch.firebaseapp.com",
   projectId: "studios-stitch",
   storageBucket: "studios-stitch.firebasestorage.app",
